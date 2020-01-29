@@ -1,7 +1,7 @@
 # simple-python-bibliometrics
 
 
-update: examples.py underway
+update: examples.py underway. That will be the way to get started.
 
 
 Goals:
@@ -25,3 +25,4 @@ This is to make sure the project for example does not accidentally publish stole
 PS: The project is only partially ready for production.
 
 
+If you have questions feel free to make an issue ticket even if it is not an issue : )
