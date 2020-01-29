@@ -1,5 +1,9 @@
 # simple-python-bibliometrics
 
+
+update: examples.py underway
+
+
 Goals:
 The goal of this public repository is to provide a software package for bibliometricians across the world to collect their data, process it, and store it easily. The package has two focuses only:
 1. The code must be as easy to use as possible
@@ -8,8 +12,7 @@ The goal of this public repository is to provide a software package for bibliome
 This also means the code does not do any visualization or website services.
 
 
-License and attribution:
-This repository falls under the MIT license.
+License and attribution: see LICENSE.md
 
 Contributions:
 If you want to make a contribution you are very welcome, and for a good process I only need you to meet the following conditions:
