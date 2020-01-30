@@ -4,14 +4,14 @@
 # these are functions which are generally used in every product
 
 
-from import_framework.opensource.nlp_functions import remove_punctuation
-from import_framework.opensource.nlp_functions import get_abstract_if_any
-from import_framework.opensource.nlp_functions import comma_space_fix
-from import_framework.opensource.static import UNPAYWALL_EMAIL
-from import_framework.opensource.static import PATH_STATIC_RESPONSES
-from import_framework.opensource.static import PATH_STATIC_RESPONSES_ALTMETRIC
-from import_framework.opensource.static import PATH_STATIC_RESPONSES_SCOPUS_ABS
-from import_framework.opensource.static import MAX_NUM_WORKERS  # not used everywhere so care
+from nlp_functions import remove_punctuation
+from nlp_functions import get_abstract_if_any
+from nlp_functions import comma_space_fix
+from static import UNPAYWALL_EMAIL
+from static import PATH_STATIC_RESPONSES
+from static import PATH_STATIC_RESPONSES_ALTMETRIC
+from static import PATH_STATIC_RESPONSES_SCOPUS_ABS
+from static import MAX_NUM_WORKERS  # not used everywhere so care
 import pandas as pd
 import calendar
 import numpy as np
@@ -34,7 +34,7 @@ from unittest.mock import Mock
 from requests.models import Response
 #import sys
 #sys.path.insert(0, 'C:/Users/yasin/Desktop/git/common_functions')
-from import_framework.opensource.nlp_functions import faculty_finder
+from nlp_functions import faculty_finder
 
 
 def make_doi_list_from_csv(source_path, output_path, do_return=True):

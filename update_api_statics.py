@@ -4,8 +4,8 @@
 
 import requests
 import pickle  # will cPickle under the hood
-from import_framework.static import PATH_STATIC_RESPONSES
-from import_framework.static import PATH_STATIC_RESPONSES_ALTMETRIC
+from static import PATH_STATIC_RESPONSES
+from static import PATH_STATIC_RESPONSES_ALTMETRIC
 
 do_altmetric = True
 

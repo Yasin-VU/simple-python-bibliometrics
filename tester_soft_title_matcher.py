@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 import sys
 sys.path.insert(0, 'C:/Users/yasin/Desktop/git/common_functions')  # not needed sometimes
-from import_framework.nlp_functions import stack_titles, SoftTitleMatcher
+from nlp_functions import stack_titles, SoftTitleMatcher
 import matplotlib.pyplot as plt
 #
 # end of imports

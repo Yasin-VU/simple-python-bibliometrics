@@ -16,7 +16,7 @@ my_query = "AUTHOR(Gunes) AND TITLE(TENSOR)"
 # There are two ways to do this: either by using general API commands or by using a 'wrapper'.
 # The 'wrapper' is a package of functions which simplifies the general API commands
 # One wrapper for scopus search is the following
-import ScopusSearch
+from pybliometrics.scopus import ScopusSearch
 # knowledge of python packages is assumed
 # if that command failed, install the package pybliometrics
 # during your first run an api-key will be asked, get one from scopus

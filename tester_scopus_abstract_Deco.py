@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from import_framework.core_functions import crystal_scopus_abstract
+from core_functions import crystal_scopus_abstract
 import time
 
 

@@ -12,10 +12,10 @@ import datetime
 from pybliometrics.scopus import ScopusSearch
 import pandas as pd
 import numpy as np
-from import_framework.core_functions import get_today_for_pubdatetxt
-from import_framework.core_functions import get_today_for_pubdatetxt_super
-from import_framework.core_functions import get_today_for_pubdatetxt_integers
-from import_framework.core_functions import get_contact_point
+from core_functions import get_today_for_pubdatetxt
+from core_functions import get_today_for_pubdatetxt_super
+from core_functions import get_today_for_pubdatetxt_integers
+from core_functions import get_contact_point
 
 
 class MyTask(luigi.Task):

@@ -14,16 +14,16 @@ from pybliometrics.scopus import ScopusSearch
 # imports from our own import framework
 ######import sys
 #####sys.path.insert(0, 'C:/Users/yasin/Desktop/git/common_functions')  # not needed sometimes
-from import_framework.nlp_functions import faculty_finder
-from import_framework.nlp_functions import corresponding_author_functions
+from nlp_functions import faculty_finder
+from nlp_functions import corresponding_author_functions
 #
-from import_framework.core_functions import add_year_and_month
-from import_framework.core_functions import get_scopus_abstract_info
-from import_framework.core_functions import get_first_chosen_affiliation_author  # ! i want all vu authors now : )
-from import_framework.core_functions import add_unpaywall_columns
-from import_framework.core_functions import add_deal_info
-from import_framework.core_functions import fn_cats, get_today, get_today_for_pubdatetxt
-from import_framework.opensource.database_functions import get_last_primary_key, push_df_to_db, get_connection, \
+from core_functions import add_year_and_month
+from core_functions import get_scopus_abstract_info
+from core_functions import get_first_chosen_affiliation_author  # ! i want all vu authors now : )
+from core_functions import add_unpaywall_columns
+from core_functions import add_deal_info
+from core_functions import fn_cats, get_today, get_today_for_pubdatetxt
+from database_functions import get_last_primary_key, push_df_to_db, get_connection, \
     process_df_to_list_to_push, pre_process_for_push
 
 ## settings

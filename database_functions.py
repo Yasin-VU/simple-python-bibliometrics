@@ -1,7 +1,7 @@
 # Goal: provide database functions for plug-and-play database use instead of flat files
 
-from import_framework.nlp_functions import faculty_finder
-from import_framework.static import UNPAYWALL_EMAIL
+from nlp_functions import faculty_finder
+from static import UNPAYWALL_EMAIL
 import pandas as pd
 import calendar
 import numpy as np
@@ -22,17 +22,17 @@ import calendar  # new
 # imports from our own import framework
 #####import sys
 #####sys.path.insert(0, 'C:/Users/yasin/Desktop/git/common_functions')  # not needed sometimes
-from import_framework.nlp_functions import faculty_finder
-from import_framework.nlp_functions import get_dist
-from import_framework.nlp_functions import corresponding_author_functions
+from nlp_functions import faculty_finder
+from nlp_functions import get_dist
+from nlp_functions import corresponding_author_functions
 #
-from import_framework.core_functions import add_year_and_month
-from import_framework.core_functions import get_scopus_abstract_info
-from import_framework.core_functions import get_first_chosen_affiliation_author  # ! i want all vu authors now : )
-from import_framework.core_functions import add_unpaywall_columns
-from import_framework.core_functions import my_timestamp
-from import_framework.core_functions import add_deal_info
-from import_framework.core_functions import make_types_native_basic
+from core_functions import add_year_and_month
+from core_functions import get_scopus_abstract_info
+from .core_functions import get_first_chosen_affiliation_author  # ! i want all vu authors now : )
+from .core_functions import add_unpaywall_columns
+from .core_functions import my_timestamp
+from .core_functions import add_deal_info
+from .core_functions import make_types_native_basic
 
 # not sure if used at all, test it
 #

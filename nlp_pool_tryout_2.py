@@ -18,8 +18,8 @@ import cProfile  # remove later
 import pandas as pd
 import numpy as np
 from multiprocessing import Pool
-from import_framework.nlp_functions import get_jaccard_sim
-from import_framework.nlp_functions import stack_titles
+from nlp_functions import get_jaccard_sim
+from nlp_functions import stack_titles
 import time
 from nltk.corpus import stopwords
 from nltk.stem.snowball import SnowballStemmer
