@@ -11,6 +11,8 @@ The goal of this public repository is to provide a software package for bibliome
 
 This also means the code does not do any visualization or website services.
 
+Furthermore, basic experience with python and a working installation is assumed. 
+Some functions query Elsevier or other paid services and require their licenses.
 
 License and attribution: see LICENSE.md
 
