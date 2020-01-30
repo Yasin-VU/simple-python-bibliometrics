@@ -107,6 +107,7 @@ class Streams_scopus(luigi.Task):
 
         mini_test = True
 
+        print('naming swapped?')
         cur_mon = self.yr
         cur_year = self.mn
 
@@ -197,24 +198,98 @@ if __name__ == '__main__':
 # a = input('press any key')
 print('continuing')
 # oadash-ETL buildup
+
+# settings
 #
-#
-path_deals = r'G:\UBVU\Data_RI\raw data algemeen\apcdeals.csv'
-path_isn = r'G:\UBVU\Data_RI\raw data algemeen\ISN_ISSN.csv'
-path_org = r'G:\UBVU\Data_RI\raw data algemeen\vu_organogram_2.xlsx'
+# most-outer-loop-settings: variable
+year_range_outer = [2000, 2001, 2002]
 path_out = 'C:/Users/yasin/Desktop/oa new csv/'  # no r
-path_vsnu_afids = r'G:\UBVU\Data_RI\raw data algemeen\afids_vsnu_nonfin.csv'
 chosen_affid = ["60008734","60029124","60012443","60109852","60026698","60013779","60032886","60000614",
                 "60030550","60013243","60026220","60001997"]  # I added 60001997 and thus I added VUMC
 #VU_noMC_affid = "(AF-ID(60008734) OR AF-ID(60029124) OR AF-ID(60012443) OR AF-ID(60109852) OR AF-ID(60026698) OR AF-ID(60013779) OR AF-ID(60032886) OR AF-ID(60000614) OR AF-ID(60030550) OR AF-ID(60013243) OR AF-ID(60026220))"
 VU_with_VUMC_affid = "(   AF-ID(60001997) OR    AF-ID(60008734) OR AF-ID(60029124) OR AF-ID(60012443) OR AF-ID(60109852) OR AF-ID(60026698) OR AF-ID(60013779) OR AF-ID(60032886) OR AF-ID(60000614) OR AF-ID(60030550) OR AF-ID(60013243) OR AF-ID(60026220))"
-my_query = VU_with_VUMC_affid + ' AND ' + "( PUBYEAR  =  2018)"  + "TITLE(TENSOR)" ### "PUBDATETXT(February 2018)"
-
-# corresponding author
+my_query = VU_with_VUMC_affid + ' AND ' + "( PUBYEAR  =  2018)" + "TITLE(TENSOR)"  # "PUBDATETXT(February 2018)"
+#
+#
+#
+# most-outer-loop-settings: semi-fixed
+path_deals = r'G:\UBVU\Data_RI\raw data algemeen\apcdeals.csv'
+path_isn = r'G:\UBVU\Data_RI\raw data algemeen\ISN_ISSN.csv'
+path_org = r'G:\UBVU\Data_RI\raw data algemeen\vu_organogram_2.xlsx'
+path_vsnu_afids = r'G:\UBVU\Data_RI\raw data algemeen\afids_vsnu_nonfin.csv'
 vu_afids = chosen_affid
 # this is vsnu w/o phtu and such (borrowed from VSNU-SDG-data), but should approach the UKB list... good for now. update later.
 all_vsnu_sdg_afids = pd.read_csv(path_vsnu_afids).iloc[:,1].astype('str').to_list()
+#
+# end of settings
 
+# now step by step push into an ETL-form in order to be able to easily skip steps during testing
+
+
+# busy here: think of input and output: do you want the next step to pass full query with year or w/o: I WANT WITHOUT
+# using argpass with only query will just make it harder to make year list pass from other connectors
+class ScopusPerYear(luigi.Task):
+    """
+    Harvests one year of Scopus for a given query
+    """
+    yr = luigi.IntParameter()
+    qr = luigi.Parameter()
+
+    def run(self):
+        """
+        Generates data and writes it into the :py:meth:`~.Streams.output` target.
+        """
+
+        cur_year = self.yr
+        cur_query = self.qr
+
+        my_query = ''
+
+
+        res = pd.DataFrame(ScopusSearch(my_query, refresh=True).results)
+
+        # luigi pandas?
+
+        if False:
+            with self.output().open('w') as output:
+                for _ in range(1000):
+                    output.write('{} {} {}\n'.format(
+                        random.randint(0, 999),
+                        random.randint(0, 999),
+                        random.randint(0, 999)))
+        else:
+            res.to_csv(self.output().path, index=False, encoding='utf-8')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+a = input('press any key to run the regular pipeline')
+
+### below is the starting point pipeline
 
 # major tasks:
 # 1. perform scopus search
@@ -272,7 +347,7 @@ df = renames(df)
 df['vu_contact_person'] = df.apply(get_contact_point,axis=1)
 
 # 12. after this point, there is a lot going on with PURE processing, P+S merging, keuzemodel, STM(tester_STM!!),
-#     and all the stuff that is already in production
+#     and more stuff (partially in production, partially not yet)
 #     this will require a lot of searching and refactoring
 #     we must first move the stuff above to luigi s.t. we can skip those edits/downloads while testing : )
 
