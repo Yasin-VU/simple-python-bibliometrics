@@ -1894,3 +1894,50 @@ def renames(df):
     return df
 
 
+def add_abstract_columns(df_in):
+    #
+    # please upgrade to crystals later
+    #
+    df_ab = pd.DataFrame()
+    for counter, cur_eid in enumerate(list(df_in.eid.unique())):
+        # get abstract
+        dict_ab_info = get_scopus_abstract_info(cur_eid)  # !
+        dict_ab_info['eid'] = cur_eid
+        df_ab = df_ab.append(dict_ab_info, ignore_index=True)
+
+    return df_in.merge(df_ab, on='eid', how='left')
+
+
+def add_author_info_columns(df_in, chosen_affid):
+
+    df_au = pd.DataFrame()
+    for counter, cur_eid in enumerate(list(df_in.eid.unique())):  # every eid = 1 paper = 1 author set = 1 routine
+        # not ideal but OK
+        abs_obj = df_in[df_in.eid == cur_eid].iloc[0, :].abstract_object
+
+        # get first chosen affiliation author
+        dict_auth_info = get_first_chosen_affiliation_author(abs_obj, chosen_affid)
+        dict_auth_info['eid'] = cur_eid
+        df_au = df_au.append(dict_auth_info, ignore_index=True)
+    return df_in.merge(df_au, on='eid', how='left')
+
+
+def add_faculty_info_columns(df_in, ff):
+
+    df_ff = pd.DataFrame()
+    for counter, cur_eid in enumerate(list(df_in.eid.unique())):  # every eid = 1 paper = 1 ff-return = 1 routine
+        # not ideal but OK
+        abs_obj = df_in[df_in.eid == cur_eid].iloc[0, :].abstract_object
+        author_error = df_in[df_in.eid == cur_eid].iloc[0, :].first_affil_author_has_error
+        author_org = df_in[df_in.eid == cur_eid].iloc[0, :].first_affil_author_org
+
+        if author_error == True:
+            print('no chosen affid author found at EID:' + str(cur_eid))
+            dict_ff = ff.match_nan()
+        else:
+            # get faculty
+            dict_ff = ff.match(author_org)
+        dict_ff['eid'] = cur_eid
+        df_ff = df_ff.append(dict_ff, ignore_index=True)
+
+    return df_in.merge(df_ff, on='eid', how='left')

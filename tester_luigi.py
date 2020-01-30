@@ -1,7 +1,7 @@
-# goal: refactor pipeline, increase robustness
 
-# debug: start eerst luigid in conda met luigid
-
+# this is a work in progress to organize all different functions into an ETL pipeline in order to provide an overview
+# basically it does exactly the same, but is easier to overview, to fix, and allows for ETL-functions*
+# * like skipping where data is already available and scheduling and advanced error logs, etc
 
 
 # my_module.py, available in your sys.path
@@ -16,6 +16,15 @@ from core_functions import get_today_for_pubdatetxt
 from core_functions import get_today_for_pubdatetxt_super
 from core_functions import get_today_for_pubdatetxt_integers
 from core_functions import get_contact_point
+from core_functions import add_year_and_month
+from core_functions import get_scopus_abstract_info
+from core_functions import get_first_chosen_affiliation_author  # ! i want all vu authors now : )
+from core_functions import add_unpaywall_columns
+from core_functions import my_timestamp
+from core_functions import add_deal_info
+from core_functions import add_abstract_columns, add_author_info_columns, add_faculty_info_columns, fn_cats, renames
+from nlp_functions import faculty_finder
+from nlp_functions import corresponding_author_functions
 
 
 class MyTask(luigi.Task):
@@ -185,7 +194,8 @@ if __name__ == '__main__':
 # + careful with scopus-search completeness, splitting it up may cause loss of data
 
 
-input('wait a while')
+# a = input('press any key')
+print('continuing')
 # oadash-ETL buildup
 #
 #
@@ -198,7 +208,7 @@ chosen_affid = ["60008734","60029124","60012443","60109852","60026698","60013779
                 "60030550","60013243","60026220","60001997"]  # I added 60001997 and thus I added VUMC
 #VU_noMC_affid = "(AF-ID(60008734) OR AF-ID(60029124) OR AF-ID(60012443) OR AF-ID(60109852) OR AF-ID(60026698) OR AF-ID(60013779) OR AF-ID(60032886) OR AF-ID(60000614) OR AF-ID(60030550) OR AF-ID(60013243) OR AF-ID(60026220))"
 VU_with_VUMC_affid = "(   AF-ID(60001997) OR    AF-ID(60008734) OR AF-ID(60029124) OR AF-ID(60012443) OR AF-ID(60109852) OR AF-ID(60026698) OR AF-ID(60013779) OR AF-ID(60032886) OR AF-ID(60000614) OR AF-ID(60030550) OR AF-ID(60013243) OR AF-ID(60026220))"
-my_query = VU_with_VUMC_affid + ' AND ' + "( PUBYEAR  =  2018)"   ### "PUBDATETXT(February 2018)"
+my_query = VU_with_VUMC_affid + ' AND ' + "( PUBYEAR  =  2018)"  + "TITLE(TENSOR)" ### "PUBDATETXT(February 2018)"
 
 # corresponding author
 vu_afids = chosen_affid
@@ -215,21 +225,29 @@ fav_fields = ['eid',  'creator',  'doi',  'title',  'afid',
  'coverDate',  'coverDisplayDate',  'publicationName', 'issn',  'source_id', 'eIssn',
  'citedby_count', 'fund_sponsor', 'aggregationType', 'openaccess']
 df = df[fav_fields]  # cut fields
+#
+# 1X: drop all empty eids to prevent issues later (to be safe)
+df = df.dropna(axis=0, subset=['eid'], inplace=False)
 
 # 2. add year and month
 df = add_year_and_month(df, 'coverDate')  # add info columns
 
 # below we split up 3 routines which are wrongfully combined (refactor required)
 
-"""
 # 3. add abs
 df = add_abstract_columns(df)
 
 # 4. add au
-df = add_author_info_columns(df)
+df = add_author_info_columns(df, chosen_affid)
 
 # 5. add ff
-df = add_faculty_info_columns(df)
+#
+# 5A. prepare the faculty_finder NLP tool
+org_info = pd.read_excel(path_org, skiprows=0)
+ff = faculty_finder(organizational_chart=org_info)
+#
+# 5B. add ff
+df = add_faculty_info_columns(df, ff)
 
 # 6. add unpaywall
 df = add_unpaywall_columns(df, silent=False)
@@ -256,56 +274,11 @@ df['vu_contact_person'] = df.apply(get_contact_point,axis=1)
 # 12. after this point, there is a lot going on with PURE processing, P+S merging, keuzemodel, STM(tester_STM!!),
 #     and all the stuff that is already in production
 #     this will require a lot of searching and refactoring
+#     we must first move the stuff above to luigi s.t. we can skip those edits/downloads while testing : )
+
+df.head()
 
 
-
-# below I make functions which you should move
-
-from import_framework.core_functions import add_year_and_month
-from import_framework.core_functions import get_scopus_abstract_info
-from import_framework.core_functions import get_first_chosen_affiliation_author  # ! i want all vu authors now : )
-from import_framework.core_functions import add_unpaywall_columns
-from import_framework.core_functions import my_timestamp
-from import_framework.core_functions import add_deal_info
-
-
-def add_abstract_columns(df):
-    #
-    # please upgrade to crystals later
-    #
-    df_ab = pd.DataFrame()
-
-    # how to deal with apply returning multiple column... where is my expanddims code?
-    xxx
-    {'abstract_object': ab,
-     'no_author_group_warning': no_author_group,
-     'abstract_error': error,
-     'abstract_error_message': error_message}
-
-
-    for counter, cur_eid in enumerate(list(df.eid.unique())):
-        # get abstract
-        dict_ab_info = get_scopus_abstract_info(cur_eid)  # !
-        dict_ab_info['eid'] = cur_eid
-        df_ab = df_ab.append(dict_ab_info, ignore_index=True)
-
-    return df.merge(df_ab, on='eid', how='left')
-
-
-def add_author_info_columns(df):
-
-    df_au = pd.DataFrame()
-
-    # how to deal with apply returning multiple column... where is my expanddims code?
-
-    df[{'first_affil_author': first_vu_author,
-            'first_affil_author_org': cur_org,
-            'first_affil_author_has_error': has_error}] = df['abstract_object'].apply(lambda x: get_first_chosen_affiliation_author(x, chosen_affid))
-
-    return df
-"""
-
-# NEVER SUBMIT BROKEN CODE
 
 
 
