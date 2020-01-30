@@ -19,22 +19,23 @@ my_query = "AUTHOR(Gunes) AND TITLE(TENSOR)"
 import ScopusSearch
 # knowledge of python packages is assumed
 # if that command failed, install the package pybliometrics
+# during your first run an api-key will be asked, get one from scopus
 #
 # now send out the query
 # easy querying of Scopus
 s = ScopusSearch(my_query)
+# the variable s stores the res
+ults
 #
-# next pandas
-
-
-
-# download package
-# imports?
-# setup config
-# api keys
-
+# next we turn it into a pandas dataframe for easy handling
+# we use s.results to make the wrapper return the results in suitable format
 df = pd.DataFrame(s.results)
+#
+# now the data can be printed
+print(df.head())
+#
+# this wraps up how to get scopus dsta through python automatically
 
 
+# example 1: enriching your data with Altmetric
 
-# example 1
