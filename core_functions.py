@@ -603,8 +603,7 @@ def crystal_altmetric(cur_id, my_requests):
         r = my_requests.get(url, params={}, headers={})
 
     return r, relevant_keys, cur_id_lower, prepend, id_type
-
-
+add_altmetric_columns = crystal_altmetric  # test me
 
 
 
