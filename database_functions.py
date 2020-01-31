@@ -1,5 +1,7 @@
 # Goal: provide database functions for plug-and-play database use instead of flat files
 
+from static import PATH_START, PATH_START_PERSONAL
+from static import PATH_START_SERVER , PATH_START_PERSONAL_SERVER
 from nlp_functions import faculty_finder
 from static import UNPAYWALL_EMAIL
 import pandas as pd
@@ -20,8 +22,6 @@ from datetime import datetime  # new
 import calendar  # new
 
 # imports from our own import framework
-#####import sys
-#####sys.path.insert(0, 'C:/Users/yasin/Desktop/git/common_functions')  # not needed sometimes
 from nlp_functions import faculty_finder
 from nlp_functions import get_dist
 from nlp_functions import corresponding_author_functions

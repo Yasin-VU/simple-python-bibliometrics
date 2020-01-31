@@ -9,11 +9,11 @@
 # warning: code of harvester should be refactored and bound with oadash
 
 ## imports
+from static import PATH_START, PATH_START_PERSONAL
+from static import PATH_START_SERVER , PATH_START_PERSONAL_SERVER
 import pandas as pd
 from pybliometrics.scopus import ScopusSearch
 # imports from our own import framework
-######import sys
-#####sys.path.insert(0, 'C:/Users/yasin/Desktop/git/common_functions')  # not needed sometimes
 from nlp_functions import faculty_finder
 from nlp_functions import corresponding_author_functions
 #
@@ -31,19 +31,27 @@ running_on_server = False
 #
 # paths
 if running_on_server:
-    df_pass = pd.read_csv(r'C:\Users\yasing\Desktop\git\password_mydb.csv')
-    path_deals = 'C:/Users/yasing/Desktop/oa oktober/apcdeals.csv'                #check
-    path_isn = 'C:/Users/yasing/Desktop/oa oktober/ISN_ISSN.csv'                  #check
-    path_org = 'C:/Users/yasing/Desktop/oa oktober/vu_organogram_2.xlsx'          #check
-    path_out = 'C:/Users/yasing/Desktop/oa oktober/'                              #check
-    path_vsnu_afids = 'C:/Users/yasing/Desktop/oa oktober/afids_vsnu_nonfin.csv'  #check
+    #df_pass = pd.read_csv(r'C:\Users\yasing\Desktop\git\password_mydb.csv')
+    #path_deals = 'C:/Users/yasing/Desktop/oa oktober/apcdeals.csv'                #check
+    #path_isn = 'C:/Users/yasing/Desktop/oa oktober/ISN_ISSN.csv'                  #check
+    #path_org = 'C:/Users/yasing/Desktop/oa oktober/vu_organogram_2.xlsx'          #check
+    #path_out = 'C:/Users/yasing/Desktop/oa oktober/'                              #check
+    #path_vsnu_afids = 'C:/Users/yasing/Desktop/oa oktober/afids_vsnu_nonfin.csv'  #check
+
+    df_pass = pd.read_csv(PATH_START_PERSONAL_SERVER + r'\password_mydb.csv')
+    path_deals = PATH_START_SERVER + r'\raw data algemeen\apcdeals.csv'
+    path_isn = PATH_START_SERVER + r'\raw data algemeen\ISN_ISSN.csv'
+    path_org = PATH_START_SERVER + r'\raw data algemeen\vu_organogram_2.xlsx'
+    path_out = PATH_START_PERSONAL_SERVER + '/out_daily/'  # no r
+    path_vsnu_afids = PATH_START_SERVER + r'\raw data algemeen\afids_vsnu_nonfin.csv'
+
 else:
-    df_pass = pd.read_csv(r'C:\Users\yasin\Desktop\git\password_mydb.csv')
-    path_deals = r'G:\UBVU\Data_RI\raw data algemeen\apcdeals.csv'
-    path_isn = r'G:\UBVU\Data_RI\raw data algemeen\ISN_ISSN.csv'
-    path_org = r'G:\UBVU\Data_RI\raw data algemeen\vu_organogram_2.xlsx'
-    path_out = 'C:/Users/yasin/Desktop/oa new csv/'  # no r
-    path_vsnu_afids = r'G:\UBVU\Data_RI\raw data algemeen\afids_vsnu_nonfin.csv'
+    df_pass = pd.read_csv(PATH_START_PERSONAL + r'\password_mydb.csv')
+    path_deals = PATH_START + r'\raw data algemeen\apcdeals.csv'
+    path_isn = PATH_START + r'\raw data algemeen\ISN_ISSN.csv'
+    path_org = PATH_START + r'\raw data algemeen\vu_organogram_2.xlsx'
+    path_out = PATH_START_PERSONAL + '/out_daily/'  # no r
+    path_vsnu_afids = PATH_START + r'\raw data algemeen\afids_vsnu_nonfin.csv'
 #
 # read in pass (distribute mysql accounts as some point)
 user = df_pass.user[0]

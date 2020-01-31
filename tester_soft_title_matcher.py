@@ -4,10 +4,12 @@
 
 # imports
 #
+from static import PATH_START, PATH_START_PERSONAL
+from static import PATH_START_SERVER , PATH_START_PERSONAL_SERVER
 import pandas as pd
 import numpy as np
 import sys
-sys.path.insert(0, 'C:/Users/yasin/Desktop/git/common_functions')  # not needed sometimes
+sys.path.insert(0, PATH_START_PERSONAL + '/common_functions')  # not needed sometimes
 from nlp_functions import stack_titles, SoftTitleMatcher
 import matplotlib.pyplot as plt
 #
@@ -17,7 +19,7 @@ import matplotlib.pyplot as plt
 # settings
 #
 # starting point of P+S table to improve with STM
-df_total = pd.read_csv(r'G:\UBVU\Data_RI\raw data algemeen\pipeline_test\merged_data\df_total.csv')
+df_total = pd.read_csv(PATH_START + r'\raw data algemeen\pipeline_test\merged_data\df_total.csv')
 # chosen year
 chosen_year = 2018
 #
@@ -35,8 +37,8 @@ df_total_with_STM, df_total_with_STM_rich_2018 = stm.improve_merged_table_using_
                                                                                             do_save=False,
                                                                                             cond_len=4,
                                                                                             cond_score=0.6)
-df_total_with_STM_rich_2018.to_csv(r'G:\UBVU\Data_RI\raw data algemeen\code speedup test data\refactor_test.xlsx')
-tester = pd.read_csv(r'G:\UBVU\Data_RI\raw data algemeen\code speedup test data\nlp2_result_fast - refactor test.xlsx')
+df_total_with_STM_rich_2018.to_csv(PATH_START + r'raw data algemeen\code speedup test data\refactor_test.xlsx')
+tester = pd.read_csv(PATH_START + r'raw data algemeen\code speedup test data\nlp2_result_fast - refactor test.xlsx')
 #
 # end of test
 #

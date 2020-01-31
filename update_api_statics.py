@@ -2,6 +2,8 @@
 # we use these for shortcuts like mimicking unpaywall response on invalid DOIs and mocks
 # wacht the path
 
+from static import PATH_START, PATH_START_PERSONAL
+from static import PATH_START_SERVER , PATH_START_PERSONAL_SERVER
 import requests
 import pickle  # will cPickle under the hood
 from static import PATH_STATIC_RESPONSES

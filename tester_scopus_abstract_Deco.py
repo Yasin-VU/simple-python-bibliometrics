@@ -1,4 +1,6 @@
 import numpy as np
+from static import PATH_START, PATH_START_PERSONAL
+from static import PATH_START_SERVER , PATH_START_PERSONAL_SERVER
 import pandas as pd
 from core_functions import crystal_scopus_abstract
 import time
@@ -8,7 +10,7 @@ import time
 
 
 MTCOUNT = 1000
-df = pd.read_excel(r'G:\UBVU\Data_RI\raw data algemeen\api_caches\try02.xlsx', nrows=MTCOUNT, usecols=['eid'])
+df = pd.read_excel(PATH_START  + r'raw data algemeen\api_caches\try02.xlsx', nrows=MTCOUNT, usecols=['eid'])
 print(df.head())
 
 res = crystal_scopus_abstract(df.head(1))
@@ -82,9 +84,9 @@ qq=qq+1
 # pickle.loads((res.scopus_abstract_obje[0])).authorgroup
 # pickle.loads((x)).authorgroup
 # res.scopus_abstract_obje.apply(lambda x: pickle.loads(x).authorgroup)
-# fullres.scopus_abstract_obje.apply(lambda x: pickle.loads(x).authorgroup).to_csv(r'G:\UBVU\Data_RI\raw data algemeen\api_caches\test.csv')
+# fullres.scopus_abstract_obje.apply(lambda x: pickle.loads(x).authorgroup).to_csv(PATH_START + r'raw data algemeen\api_caches\test.csv')
 
-fullres.scopus_abstract_obje.apply(lambda x: pickle.loads(x).authorgroup).to_csv(r'G:\UBVU\Data_RI\raw data algemeen\api_caches\test.csv')
+fullres.scopus_abstract_obje.apply(lambda x: pickle.loads(x).authorgroup).to_csv(PATH_START + r'raw data algemeen\api_caches\test.csv')
 
 # there are some sanitization issues, but overall it looks filled and good
 #

@@ -7,6 +7,8 @@
 # my_module.py, available in your sys.path
 import luigi
 import random
+from static import PATH_START, PATH_START_PERSONAL
+from static import PATH_START_SERVER , PATH_START_PERSONAL_SERVER
 from collections import defaultdict
 import datetime
 from pybliometrics.scopus import ScopusSearch
@@ -89,7 +91,7 @@ class Streams(luigi.Task):
         :rtype: object (:py:class:`luigi.target.Target`)
         """
 
-        return luigi.LocalTarget('C:/Users/yasin/Desktop/luigi/data/streams_faked_%s.tsv' % self.date)  # no date...
+        return luigi.LocalTarget(PATH_START_PERSONAL + '/luigi/data/streams_faked_%s.tsv' % self.date)  # no date...
 
 
 class Streams_scopus(luigi.Task):
@@ -141,7 +143,7 @@ class Streams_scopus(luigi.Task):
         :rtype: object (:py:class:`luigi.target.Target`)
         """
 
-        return luigi.LocalTarget('C:/Users/yasin/Desktop/luigi/data/streams_faked_%s_%d.tsv' % (self.yr, self.mn))
+        return luigi.LocalTarget(PATH_START_PERSONAL + '\luigi\data\streams_faked_%s_%d.tsv' % (self.yr, self.mn))
 
 
 
@@ -150,7 +152,7 @@ class RefreshUnpaywall(luigi.Task):
     year_range = luigi.ListParameter()
 
     def output(self):
-        return luigi.LocalTarget('C:/Users/yasin/Desktop/luigi/data/streams_faked_2.tsv') # % self.date_interval
+        return luigi.LocalTarget(PATH_START_PERSONAL + '/luigi/data/streams_faked_2.tsv') # % self.date_interval
 
     def requires(self):
         zip_list = [list(zip(np.arange(0, 12) + 1, [yr] * 12)) for yr in self.year_range]  # in self.year_range]
@@ -203,7 +205,7 @@ print('continuing')
 #
 # most-outer-loop-settings: variable
 year_range_outer = [2000, 2001, 2002]
-path_out = 'C:/Users/yasin/Desktop/oa new csv/'  # no r
+path_out = PATH_START_PERSONAL + '/oa new csv/'  # no r
 chosen_affid = ["60008734","60029124","60012443","60109852","60026698","60013779","60032886","60000614",
                 "60030550","60013243","60026220","60001997"]  # I added 60001997 and thus I added VUMC
 #VU_noMC_affid = "(AF-ID(60008734) OR AF-ID(60029124) OR AF-ID(60012443) OR AF-ID(60109852) OR AF-ID(60026698) OR AF-ID(60013779) OR AF-ID(60032886) OR AF-ID(60000614) OR AF-ID(60030550) OR AF-ID(60013243) OR AF-ID(60026220))"
@@ -213,10 +215,10 @@ my_query = VU_with_VUMC_affid + ' AND ' + "( PUBYEAR  =  2018)" + "TITLE(TENSOR)
 #
 #
 # most-outer-loop-settings: semi-fixed
-path_deals = r'G:\UBVU\Data_RI\raw data algemeen\apcdeals.csv'
-path_isn = r'G:\UBVU\Data_RI\raw data algemeen\ISN_ISSN.csv'
-path_org = r'G:\UBVU\Data_RI\raw data algemeen\vu_organogram_2.xlsx'
-path_vsnu_afids = r'G:\UBVU\Data_RI\raw data algemeen\afids_vsnu_nonfin.csv'
+path_deals = PATH_START + r'\raw data algemeen\apcdeals.csv'
+path_isn = PATH_START + r'\raw data algemeen\ISN_ISSN.csv'
+path_org = PATH_START + r'\raw data algemeen\vu_organogram_2.xlsx'
+path_vsnu_afids = PATH_START + r'\raw data algemeen\afids_vsnu_nonfin.csv'
 vu_afids = chosen_affid
 # this is vsnu w/o phtu and such (borrowed from VSNU-SDG-data), but should approach the UKB list... good for now. update later.
 all_vsnu_sdg_afids = pd.read_csv(path_vsnu_afids).iloc[:,1].astype('str').to_list()

@@ -14,7 +14,8 @@
 import cProfile  # remove later
 
 
-
+from static import PATH_START, PATH_START_PERSONAL
+from static import PATH_START_SERVER , PATH_START_PERSONAL_SERVER
 import pandas as pd
 import numpy as np
 from multiprocessing import Pool
@@ -124,13 +125,13 @@ def pre_process(text, do_fill_empty=True, do_remove_html=False):
 use_split_types_routine = False  # turn off until team decides to add it
 if run_on_server:
     print('server settings loaded')
-    start_path = r'C:\Users\yasing\Desktop\oa oktober\code speedup test data'
-    out_path = r'C:\Users\yasing\Desktop\oa oktober\code speedup test data\nlp2_result'
+    start_path = PATH_START_SERVER + r'\code speedup test data'
+    out_path = PATH_START_SERVER + r'\code speedup test data\nlp2_result'
     num_workers = 4
 else:
     print('local settings loaded')
-    start_path = r'G:\UBVU\Data_RI\raw data algemeen\code speedup test data'
-    out_path = r'G:\UBVU\Data_RI\raw data algemeen\code speedup test data\nlp2_result_fast'
+    start_path = PATH_START +r'\raw data algemeen\code speedup test data'
+    out_path = PATH_START +r'\raw data algemeen\code speedup test data\nlp2_result_fast'
     num_workers = 10  # change to your own specs/wishes as desired (100% CPU will claim the entire machine pretty much)
 
 # get the data

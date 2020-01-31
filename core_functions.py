@@ -7,6 +7,8 @@
 from nlp_functions import remove_punctuation
 from nlp_functions import get_abstract_if_any
 from nlp_functions import comma_space_fix
+from static import PATH_START, PATH_START_PERSONAL
+from static import PATH_START_SERVER , PATH_START_PERSONAL_SERVER
 from static import UNPAYWALL_EMAIL
 from static import PATH_STATIC_RESPONSES
 from static import PATH_STATIC_RESPONSES_ALTMETRIC
@@ -33,7 +35,6 @@ import functools
 from unittest.mock import Mock
 from requests.models import Response
 #import sys
-#sys.path.insert(0, 'C:/Users/yasin/Desktop/git/common_functions')
 from nlp_functions import faculty_finder
 
 
@@ -1610,13 +1611,13 @@ def merge_pure_with_scopus_data(df_p, df_s, df_t):
     return df_combined, diagnostics
 
 
-def prepare_combined_data(start_path,  # r'G:\UBVU\Data_RI\raw data algemeen\machine learning'
+def prepare_combined_data(start_path,
                          year_range=(2017, 2018, 2019),
                          add_abstract=True,
                          skip_preprocessing_pure_instead_load_cache=False,  # safe
                          remove_ultra_rare_class_other=True,
-                         path_pw=r'C:\Users\yasin\Desktop\git',
-                         org_info=pd.read_excel(r'G:\UBVU\Data_RI\raw data algemeen\vu_organogram_2.xlsx', skiprows=0)):
+                         path_pw=PATH_START_PERSONAL,
+                         org_info=pd.read_excel( PATH_START + r'raw data algemeen\vu_organogram_2.xlsx', skiprows=0)):
     """
     This function prepares the combined data for a chosen year_range
     The raw pure files and processed scopus files per year should be available
