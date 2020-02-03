@@ -29,6 +29,7 @@ from nlp_functions import faculty_finder
 from nlp_functions import corresponding_author_functions
 
 
+
 class MyTask(luigi.Task):
     x = luigi.IntParameter()
     y = luigi.IntParameter(default=45)

@@ -6,7 +6,8 @@
 # example 0: your first dataset
 # it is known bibliometrics data exists and is out there, but it needs to get on the computer
 # preferably without any manual actions like visiting websites and pressing download buttons
-# for this purpose, one can use API's (Application Programmable Interfaces) and download data directly without leaving Python (hurray)
+# for this purpose, one can use API's (Application Programmable Interfaces) and
+# download data directly without leaving Python (hurray)
 # below a first dataset using Scopus
 #
 # first one must define a search query to tell Scopus which data is wanted (the entire corpus is simply too large)
@@ -41,7 +42,7 @@ print(df.head())
 
 
 # example 1: enriching your data with Altmetric
-# scopus is not everyhing
+# scopus is not everything
 # for example, it has no twitter mentions counts or not of sufficient quality
 # but a different API sercice named Altmetric does
 # so Altmetric can be used to 'enrich' Scopus records
@@ -75,31 +76,3 @@ df = add_unpaywall_columns(df)
 # more examples are underway
 # like scopus abstracts, author info processing, merging scopus with local
 # university/library repositories, and much more
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
