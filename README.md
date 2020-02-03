@@ -1,3 +1,5 @@
+<img src="https://zenodo.org/badge/DOI/10.5281/zenodo.3634367.svg">
+
 # simple-python-bibliometrics
 
 
@@ -29,5 +31,5 @@ PS: The project is only partially ready for production.
 
 If you have questions feel free to make an issue ticket even if it is not an issue : )
 
-[<img src="https://zenodo.org/badge/DOI/10.5281/zenodo.3634367.svg">] 
+
 
