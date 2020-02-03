@@ -11,8 +11,8 @@
 #
 # first one must define a search query to tell Scopus which data is wanted (the entire corpus is simply too large)
 # this query asks Scopus to return records of publications with 'Gunes' in the author names and 'tensor' in the title.
-my_query = "AUTHOR(Gunes) AND TITLE(TENSOR)"  
-# 
+my_query = "AUTH(Gunes) AND TITLE(TENSOR)"
+#
 # Next this query must be sent to Scopus, through the API
 # There are two ways to do this: either by using general API commands or by using a 'wrapper'.
 # The 'wrapper' is a package of functions which simplifies the general API commands
@@ -44,13 +44,13 @@ print(df.head())
 # scopus is not everyhing
 # for example, it has no twitter mentions counts or not of sufficient quality
 # but a different API sercice named Altmetric does
-# so Altmetric can be used to 'enrich' Scopus records  
+# so Altmetric can be used to 'enrich' Scopus records
 # then both information sources are combined
 #
 # Using our package, this is as simple as a single command
 from core_functions import add_altmetric_columns  # will be renamed later
 df = add_altmetric_columns(df)
-# 
+#
 # and that is all, now the dataframe df has altmetric information for every
 # record
 # the only requirement is that df has a column 'doi' and no overlapping columns
@@ -73,7 +73,7 @@ df = add_unpaywall_columns(df)
 
 
 # more examples are underway
-# like scopus abstracts, author info processing, merging scopus with local 
+# like scopus abstracts, author info processing, merging scopus with local
 # university/library repositories, and much more
 
 

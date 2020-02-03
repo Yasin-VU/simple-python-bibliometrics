@@ -15,7 +15,7 @@ from nltk.corpus import stopwords
 from nltk.stem.snowball import SnowballStemmer
 import re
 import html
-#nltk.download('punkt')
+nltk.download('punkt', quiet=True)  # check for punkt silently
 
 class SoftTitleMatcher:
     """
