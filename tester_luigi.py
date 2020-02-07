@@ -27,8 +27,8 @@ from core_functions import add_deal_info
 from core_functions import add_abstract_columns, add_author_info_columns, add_faculty_info_columns, fn_cats, renames
 from nlp_functions import faculty_finder
 from nlp_functions import corresponding_author_functions
-
-
+import pickle
+from functools import partial
 
 class MyTask(luigi.Task):
     x = luigi.IntParameter()
@@ -184,12 +184,12 @@ class RefreshUnpaywall(luigi.Task):
                 out_file.write(str(artist) + ' ' + str(count) + ' \n ')
 
 
-
-year_range = [2017, 2018]
-if __name__ == '__main__':
-    luigi_run_result = luigi.build([ ####no need for this thanks to pipeline####Streams(date=datetime.date.today()),
-                                    RefreshUnpaywall( year_range=year_range)])  # date=datetime.date.today(),
-    print(luigi_run_result)
+if False:
+    year_range = [2017, 2018]
+    if __name__ == '__main__':
+        luigi_run_result = luigi.build([ ####no need for this thanks to pipeline####Streams(date=datetime.date.today()),
+                                        RefreshUnpaywall( year_range=year_range)])  # date=datetime.date.today(),
+        print(luigi_run_result)
 
 
 
@@ -211,7 +211,7 @@ chosen_affid = ["60008734","60029124","60012443","60109852","60026698","60013779
                 "60030550","60013243","60026220","60001997"]  # I added 60001997 and thus I added VUMC
 #VU_noMC_affid = "(AF-ID(60008734) OR AF-ID(60029124) OR AF-ID(60012443) OR AF-ID(60109852) OR AF-ID(60026698) OR AF-ID(60013779) OR AF-ID(60032886) OR AF-ID(60000614) OR AF-ID(60030550) OR AF-ID(60013243) OR AF-ID(60026220))"
 VU_with_VUMC_affid = "(   AF-ID(60001997) OR    AF-ID(60008734) OR AF-ID(60029124) OR AF-ID(60012443) OR AF-ID(60109852) OR AF-ID(60026698) OR AF-ID(60013779) OR AF-ID(60032886) OR AF-ID(60000614) OR AF-ID(60030550) OR AF-ID(60013243) OR AF-ID(60026220))"
-my_query = VU_with_VUMC_affid + ' AND ' + "( PUBYEAR  =  2018)" + "TITLE(TENSOR)"  # "PUBDATETXT(February 2018)"
+my_query = VU_with_VUMC_affid + ' AND ' + "( PUBYEAR  =  2018) " + "TITLE(TENSOR)"  # "PUBDATETXT(February 2018)"
 #
 #
 #
@@ -229,8 +229,6 @@ all_vsnu_sdg_afids = pd.read_csv(path_vsnu_afids).iloc[:,1].astype('str').to_lis
 # now step by step push into an ETL-form in order to be able to easily skip steps during testing
 
 
-# busy here: think of input and output: do you want the next step to pass full query with year or w/o: I WANT WITHOUT
-# using argpass with only query will just make it harder to make year list pass from other connectors
 class ScopusPerYear(luigi.Task):
     """
     Harvests one year of Scopus for a given query
@@ -246,30 +244,144 @@ class ScopusPerYear(luigi.Task):
         cur_year = self.yr
         cur_query = self.qr
 
-        my_query = ''
+        run_query = cur_query + ' AND ( PUBYEAR  =  ' + str(cur_year) + ') '
+
+        size = ScopusSearch(run_query, refresh=True, download=False).get_results_size()
+
+        if size > 10000:
+            print('scopus query with over 10k records running, careful')
+
+        df = pd.DataFrame(ScopusSearch(run_query, refresh=True).results)
+
+        fav_fields = ['eid',  'creator',  'doi',  'title',  'afid',
+         'affilname',  'author_count',  'author_names',  'author_afids',
+         'coverDate',  'coverDisplayDate',  'publicationName', 'issn',  'source_id', 'eIssn',
+         'citedby_count', 'fund_sponsor', 'aggregationType', 'openaccess']
+        df = df[fav_fields]  # cut fields
+        #
+        # 1X: drop all empty eids to prevent issues later (to be safe)
+        df = df.dropna(axis=0, subset=['eid'], inplace=False)
+
+        df.to_csv(self.output().path, index=False) #, encoding='utf-8')
+
+    def output(self):
+        """
+        Returns the target output for this task.
+        In this case, a successful execution of this task will create a file in the local file system.
+        :return: the target output for this task.
+        :rtype: object (:py:class:`luigi.target.Target`)
+        """
+
+        return luigi.LocalTarget(PATH_START_PERSONAL + '\luigi\data\scopus_years_%s_%s.csv' % (self.yr, self.qr))
 
 
-        res = pd.DataFrame(ScopusSearch(my_query, refresh=True).results)
+class AddYearAndMonth(luigi.Task):
+    """
+    adds year and month columns to scopus raw data
+    """
+    yr = luigi.IntParameter()
+    qr = luigi.Parameter()
 
-        # luigi pandas?
+    def output(self):
+        return luigi.LocalTarget(PATH_START_PERSONAL + '\luigi\data\scopus_years_dated_%s_%s.csv' % (self.yr, self.qr))
 
-        if False:
-            with self.output().open('w') as output:
-                for _ in range(1000):
-                    output.write('{} {} {}\n'.format(
-                        random.randint(0, 999),
-                        random.randint(0, 999),
-                        random.randint(0, 999)))
+    def requires(self):
+        return ScopusPerYear(yr=self.yr, qr=self.qr)
+
+    def run(self):
+
+        # input and processing phase
+        for input in self.input():  # should be just 1 for this routine
+            df = pd.read_csv(input.path) #, index=False, encoding='utf-8')
+            df = add_year_and_month(df, 'coverDate')  # add info columns
+
+        # output phase
+        df.to_csv(self.output().path, index=False) #, encoding='utf-8')
+
+######################################
+
+
+class AddX(luigi.Task):
+    """
+    adds columns to data based on chosen settings, and set io
+    """
+    yr = luigi.IntParameter()
+    qr = luigi.Parameter()
+    out_path_name_prefix = luigi.Parameter()
+    required_luigi_class = luigi.Parameter()
+    processing_function = luigi.Parameter()
+    processing_args = luigi.ListParameter()
+
+    def output(self):
+        return luigi.LocalTarget(PATH_START_PERSONAL
+                                  + '/luigi/data/'
+                                  + self.out_path_name_prefix
+                                  + '_%s_%s.csv' % (self.yr, self.qr))
+
+    def requires(self):
+        req_fn = pickle.loads(self.required_luigi_class)
+        return req_fn(yr=self.yr, qr=self.qr)
+
+    def run(self):
+
+        # input phase
+        df_out = pd.read_csv(self.input().path) #, index=False, encoding='utf-8')
+
+
+        # you are here: code seems to be working but we need a check cause I got 5/5 author errors... yuples were fixed
+
+        # processing phase
+        #
+        proc_fn = pickle.loads(self.processing_function)
+        #
+        if len(self.processing_args) > 0:
+            arg_fn = []
+            for element in self.processing_args:
+                if (type(element) is tuple):
+                    element = list(element[0])  # undo luigi
+                arg_fn.append(element)
+            df_out = proc_fn(df_out, *arg_fn)
         else:
-            res.to_csv(self.output().path, index=False, encoding='utf-8')
+            df_out = proc_fn(df_out)
+
+        # output phase
+        df_out.to_csv(self.output().path, index=False) #, encoding='utf-8')
 
 
+# fill instance inherent args in, leave rest open for variable runs
+AddAbstractColumns = partial(AddX,
+                             # yr=2020,
+                             # qr='TITLE(TENSOR data)',
+                             out_path_name_prefix='scopus_years_abs',
+                             required_luigi_class=pickle.dumps(ScopusPerYear),
+                             processing_function=pickle.dumps(add_abstract_columns),
+                             processing_args=[]
+                             )
 
 
+AddAuthorInfoColumns = partial(AddX,
+                             # yr=2020,
+                             # qr='TITLE(TENSOR data)',
+                             out_path_name_prefix='scopus_years_au',
+                             required_luigi_class=pickle.dumps(AddAbstractColumns),
+                             processing_function=pickle.dumps(add_author_info_columns),
+                             processing_args=[chosen_affid]
+                             )
 
 
+# what about this now with extra param: df = add_author_info_columns(df, chosen_affid), an extra dict_pass? scope?
 
+######################################
 
+year_range = [2017, 2018]
+if __name__ == '__main__':
+    #luigi_run_result = luigi.build([ScopusPerYear(yr=2020, qr='TITLE(TENSOR data)')])  # date=datetime.date.today(),
+
+    #luigi_run_result = luigi.build([AddAbstractColumns(yr=2020, qr='TITLE(TENSOR data)')])
+
+    luigi_run_result = luigi.build([AddAuthorInfoColumns(yr=2020, qr='TITLE(TENSOR data)')])
+
+    print(luigi_run_result)
 
 
 
@@ -295,7 +407,7 @@ a = input('press any key to run the regular pipeline')
 ### below is the starting point pipeline
 
 # major tasks:
-# 1. perform scopus search
+# 1x. perform scopus search
 s = ScopusSearch(my_query, refresh=True)  #(VU_aff + " AND " + recent, refresh=True)
 df = pd.DataFrame(s.results)
 fav_fields = ['eid',  'creator',  'doi',  'title',  'afid',
@@ -308,7 +420,7 @@ df = df[fav_fields]  # cut fields
 df = df.dropna(axis=0, subset=['eid'], inplace=False)
 
 # 2. add year and month
-df = add_year_and_month(df, 'coverDate')  # add info columns
+df = add_year_and_month(df)  # add info columns
 
 # below we split up 3 routines which are wrongfully combined (refactor required)
 
