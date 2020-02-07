@@ -9,7 +9,7 @@ editdistance==0.5.2
 idna==2.8
 lockfile==0.12.2
 luigi==2.8.11
-mkl-fft==1.0.15
+mkl-fft==1.0.6
 mkl-random==1.1.0
 mkl-service==2.3.0
 mysql==0.0.2

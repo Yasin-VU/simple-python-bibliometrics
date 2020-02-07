@@ -591,7 +591,7 @@ def crystal_altmetric(cur_id, my_requests):
     url = api_url + 'doi' + "/" + cur_id
 
 
-    relevant_keys = ['title', 'cited_by_policies_count']  # OK for now, care some may miss, patch for that !
+    relevant_keys = ['title', 'cited_by_policies_count', 'score']  # OK for now, care some may miss, patch for that !
     # , 'doi', 'doi_lowercase'  : you get these from callers
     if cur_id == 'invalid':
         # get the invalid-doi-response directly from disk to save time, you can run update_api_statics to update it

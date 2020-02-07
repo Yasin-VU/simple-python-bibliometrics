@@ -40,7 +40,7 @@ class MyTask(luigi.Task):
 
 class MyTask1(luigi.Task):
     x = luigi.IntParameter()
-    y = luigi.IntParameter(default=0)
+    y = luigi.IntParameter(default=0) 
 
     def run(self):
         print(self.x + self.y)
