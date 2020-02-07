@@ -18,11 +18,27 @@ my_query = "AUTH(Gunes) AND TITLE(TENSOR)"
 # There are two ways to do this: either by using general API commands or by using a 'wrapper'.
 # The 'wrapper' is a package of functions which simplifies the general API commands
 # One wrapper for scopus search is the following
+#
+# first we need to install some python packages to borrow functionality from
+# for example, we need an installation of pandas for processing dataframes
+# and numpy for mathematics
+# if this repository was copied to a computer with git clone, then
+# these installations must be done before continuing
+# for this, open either command prompt window or anaconda prompt window
+# then go to the location of your python installation or activate virtual 
+# environments if any,
+# and use pip install XX, where XX is the package name and version
+# the packages required by this toolbox are in requirements.txt
+# and pip installing them one by one will finish this task
+# Alternatively, once available, a pipy package can be downloaded which
+# will do all these installations automatically. This will be released in the future.
+#
 from pybliometrics.scopus import ScopusSearch
 # knowledge of python packages is assumed
 # if that command failed, install the package pybliometrics
 # during your first run an api-key will be asked, get one from scopus
 # hint: in production code always put all imports at the top
+#
 #
 # now send out the query
 # easy querying of Scopus
@@ -76,3 +92,6 @@ df = add_unpaywall_columns(df)
 # more examples are underway
 # like scopus abstracts, author info processing, merging scopus with local
 # university/library repositories, and much more
+# also, an ETL with luigi will be prepared to run most common functions with a single call() : )
+
+

@@ -369,6 +369,44 @@ AddAuthorInfoColumns = partial(AddX,
                              )
 
 
+# untested, just prepped:
+
+# we might need a serializer for processing_args as well (!)
+org_info = pd.read_excel(path_org, skiprows=0)
+ff = faculty_finder(organizational_chart=org_info)
+AddFFColumns = partial(AddX,
+                         out_path_name_prefix='scopus_years_ff',
+                         required_luigi_class=pickle.dumps(AddAuthorInfoColumns),
+                         processing_function=pickle.dumps(add_faculty_info_columns),
+                         processing_args=[ff]
+                         )
+                          
+# ! chk if passing booleans works as intended for future                          
+AddUnpaywallColumns = partial(AddX,
+                         out_path_name_prefix='scopus_years_upw',
+                         required_luigi_class=pickle.dumps(AddFFColumns),
+                         processing_function=pickle.dumps(add_unpaywall_columns),
+                         processing_args=[False]
+                         )
+                             
+
+# we need a wrapper for this to bring it to the same form as add_author_info_columns
+# afterwards move it to core_functions
+def add_deal_info_columns():
+    # wrap add_deal_info()
+    pass
+
+AddDealColumns = partial(AddX,
+                         out_path_name_prefix='scopus_years_deals',
+                         required_luigi_class=pickle.dumps(AddUnpaywallColumns),
+                         processing_function=pickle.dumps(add_deal_info_columns),
+                         processing_args=[path_deals, path_isn]
+                         )
+                         
+# afterwards steps 8, 9, 10, 11, 12...
+                         
+                         
+                         
 # what about this now with extra param: df = add_author_info_columns(df, chosen_affid), an extra dict_pass? scope?
 
 ######################################
