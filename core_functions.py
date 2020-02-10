@@ -490,7 +490,7 @@ def appender(func, cur_id_name='doi'):
     def decorator_appender(func):
         @functools.wraps(func)
         def wrapper_appender(df_in, silent=True, cut_dupes=False, avoid_double_work=True,
-                          multi_thread=True, my_requests=None, allow_session_creation=True):
+                             multi_thread=False, my_requests=None, allow_session_creation=True):
 
 
             if cur_id_name == 'eid':
