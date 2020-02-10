@@ -334,6 +334,7 @@ class AddX(luigi.Task):
         #
         proc_fn = pickle.loads(self.processing_function)
         #
+        print(self.processing_args)
         if len(self.processing_args) > 0:
             arg_fn = []
             for element in self.processing_args:
@@ -371,7 +372,7 @@ AddAuthorInfoColumns = partial(AddX,
                              out_path_name_prefix='scopus_years_au',
                              required_luigi_class=pickle.dumps(AddAbstractColumns),
                              processing_function=pickle.dumps(add_author_info_columns),
-                             processing_args=[chosen_affid]
+                             processing_args=[[*chosen_affid + ['0']]]  # quick-fix for luigi tuple issue
                              )
 
 
@@ -424,9 +425,10 @@ if __name__ == '__main__':
 
     #luigi_run_result = luigi.build([AddAbstractColumns(yr=2020, qr='TITLE(TENSOR data)')])
 
-    luigi_run_result = luigi.build([AddAuthorInfoColumns(yr=2020, qr='TITLE(TENSOR data)')])
+    luigi_run_result = luigi.build([AddAuthorInfoColumns(yr=2020, qr=' AF-ID(60008734) AND TITLE(DATA) ')])
 
     print(luigi_run_result)
+
 
 
 
