@@ -1910,9 +1910,13 @@ def add_abstract_columns(df_in):
 
 def add_author_info_columns(df_in, chosen_affid):
 
+    qq=1
+    qq=qq+1
+    print('add_author_info_columns')
     df_au = pd.DataFrame()
     for counter, cur_eid in enumerate(list(df_in.eid.unique())):  # every eid = 1 paper = 1 author set = 1 routine
         # not ideal but OK
+        # pass
         abs_obj = df_in[df_in.eid == cur_eid].iloc[0, :].abstract_object
 
         # get first chosen affiliation author

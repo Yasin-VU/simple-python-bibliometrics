@@ -262,7 +262,7 @@ class ScopusPerYear(luigi.Task):
         # 1X: drop all empty eids to prevent issues later (to be safe)
         df = df.dropna(axis=0, subset=['eid'], inplace=False)
 
-        df.to_csv(self.output().path, index=False) #, encoding='utf-8')
+        df.to_pickle(self.output().path) #, encoding='utf-8')
 
     def output(self):
         """
@@ -272,7 +272,7 @@ class ScopusPerYear(luigi.Task):
         :rtype: object (:py:class:`luigi.target.Target`)
         """
 
-        return luigi.LocalTarget(PATH_START_PERSONAL + '\luigi\data\scopus_years_%s_%s.csv' % (self.yr, self.qr))
+        return luigi.LocalTarget(PATH_START_PERSONAL + '\luigi\data\scopus_years_%s_%s.pkl' % (self.yr, self.qr))
 
 
 class AddYearAndMonth(luigi.Task):
@@ -283,7 +283,7 @@ class AddYearAndMonth(luigi.Task):
     qr = luigi.Parameter()
 
     def output(self):
-        return luigi.LocalTarget(PATH_START_PERSONAL + '\luigi\data\scopus_years_dated_%s_%s.csv' % (self.yr, self.qr))
+        return luigi.LocalTarget(PATH_START_PERSONAL + '\luigi\data\scopus_years_dated_%s_%s.pkl' % (self.yr, self.qr))
 
     def requires(self):
         return ScopusPerYear(yr=self.yr, qr=self.qr)
@@ -292,11 +292,11 @@ class AddYearAndMonth(luigi.Task):
 
         # input and processing phase
         for input in self.input():  # should be just 1 for this routine
-            df = pd.read_csv(input.path) #, index=False, encoding='utf-8')
+            df = pd.read_pickle(input.path) #, index=False, encoding='utf-8')
             df = add_year_and_month(df, 'coverDate')  # add info columns
 
         # output phase
-        df.to_csv(self.output().path, index=False) #, encoding='utf-8')
+        df.to_pickle(self.output().path) #, encoding='utf-8')
 
 ######################################
 
@@ -316,7 +316,7 @@ class AddX(luigi.Task):
         return luigi.LocalTarget(PATH_START_PERSONAL
                                   + '/luigi/data/'
                                   + self.out_path_name_prefix
-                                  + '_%s_%s.csv' % (self.yr, self.qr))
+                                  + '_%s_%s.pkl' % (self.yr, self.qr))
 
     def requires(self):
         req_fn = pickle.loads(self.required_luigi_class)
@@ -325,7 +325,7 @@ class AddX(luigi.Task):
     def run(self):
 
         # input phase
-        df_out = pd.read_csv(self.input().path) #, index=False, encoding='utf-8')
+        df_out = pd.read_pickle(self.input().path) #, index=False, encoding='utf-8')
 
 
         # you are here: code seems to be working but we need a check cause I got 5/5 author errors... yuples were fixed
@@ -337,15 +337,21 @@ class AddX(luigi.Task):
         if len(self.processing_args) > 0:
             arg_fn = []
             for element in self.processing_args:
+                print(element)
                 if (type(element) is tuple):
-                    element = list(element[0])  # undo luigi
+                    element = list(element)
                 arg_fn.append(element)
             df_out = proc_fn(df_out, *arg_fn)
         else:
             df_out = proc_fn(df_out)
 
+        # debuf
+        print(list(df_out))
+
+        ###print(df_out[['first_affil_author', 'first_affil_author_has_error', 'first_affil_author_org']])
+
         # output phase
-        df_out.to_csv(self.output().path, index=False) #, encoding='utf-8')
+        df_out.to_pickle(self.output().path) #, encoding='utf-8')
 
 
 # fill instance inherent args in, leave rest open for variable runs
@@ -371,6 +377,7 @@ AddAuthorInfoColumns = partial(AddX,
 
 # untested, just prepped:
 
+"""
 # we might need a serializer for processing_args as well (!)
 org_info = pd.read_excel(path_org, skiprows=0)
 ff = faculty_finder(organizational_chart=org_info)
@@ -402,7 +409,7 @@ AddDealColumns = partial(AddX,
                          processing_function=pickle.dumps(add_deal_info_columns),
                          processing_args=[path_deals, path_isn]
                          )
-                         
+"""
 # afterwards steps 8, 9, 10, 11, 12...
                          
                          
