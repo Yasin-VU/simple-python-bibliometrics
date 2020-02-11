@@ -262,6 +262,7 @@ class ScopusPerYear(luigi.Task):
         # 1X: drop all empty eids to prevent issues later (to be safe)
         df = df.dropna(axis=0, subset=['eid'], inplace=False)
 
+        print(len(df))
         df.to_pickle(self.output().path) #, encoding='utf-8')
 
     def output(self):
@@ -334,11 +335,11 @@ class AddX(luigi.Task):
         #
         proc_fn = pickle.loads(self.processing_function)
         #
-        print(self.processing_args)
+        #print(self.processing_args)
         if len(self.processing_args) > 0:
             arg_fn = []
             for element in self.processing_args:
-                print(element)
+                #print(element)
                 if (type(element) is tuple):
                     element = list(element)
                 arg_fn.append(element)
@@ -346,8 +347,8 @@ class AddX(luigi.Task):
         else:
             df_out = proc_fn(df_out)
 
-        # debuf
-        print(list(df_out))
+        # debug
+        print(df_out.head(1).T)
 
         ###print(df_out[['first_affil_author', 'first_affil_author_has_error', 'first_affil_author_org']])
 
@@ -430,7 +431,8 @@ if __name__ == '__main__':
     print(luigi_run_result)
 
 
-
+# luigi design
+# we have a few functions now, let's try to push some real data through?
 
 
 
