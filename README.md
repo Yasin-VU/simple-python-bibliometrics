@@ -16,6 +16,10 @@ This also means the code does not do any visualization or website services.
 Furthermore, basic experience with python and a working installation is assumed. 
 Some functions query Elsevier or other paid services and require their licenses.
 
+Roadmap:
+Current points: examples.py, R-integration and back-end 'luigi'
+Future points: please share your wishes ! : )
+
 License and attribution: see LICENSE.md
 
 Contributions:
