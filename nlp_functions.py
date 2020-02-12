@@ -382,8 +382,8 @@ class SoftTitleMatcher:
         
         # save it
         if do_save:
-            df_total_with_STM.to_csv(out_path + r'\df_total_with_STM.csv')
-            df_total_with_STM_rich_2018.to_csv(out_path + r'\df_total_with_STM_2018.csv')
+            df_total_with_STM.to_csv(out_path + '/df_total_with_STM.csv')
+            df_total_with_STM_rich_2018.to_csv(out_path + '/df_total_with_STM_2018.csv')
 
         return df_total_with_STM, df_total_with_STM_rich_2018
     

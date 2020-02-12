@@ -5,7 +5,7 @@
 #                 so getting data may require multiple function calls
 # Target status:  just indicate which dataset you need and luigi does the rest
 #                 also more robust, with caches, schedulable
-\
+
 
 
 # my_module.py, available in your sys.path
@@ -158,7 +158,7 @@ class Streams_scopus(luigi.Task):
         :rtype: object (:py:class:`luigi.target.Target`)
         """
 
-        return luigi.LocalTarget(PATH_START_PERSONAL + '\luigi\data\streams_faked_%s_%d.tsv' % (self.yr, self.mn))
+        return luigi.LocalTarget(PATH_START_PERSONAL + '/luigi/data/streams_faked_%s_%d.tsv' % (self.yr, self.mn))
 
 
 
@@ -230,10 +230,10 @@ my_query = VU_with_VUMC_affid + ' AND ' + "( PUBYEAR  =  2018) " + "TITLE(TENSOR
 #
 #
 # most-outer-loop-settings: semi-fixed
-path_deals = PATH_START + r'\raw data algemeen\apcdeals.csv'
-path_isn = PATH_START + r'\raw data algemeen\ISN_ISSN.csv'
-path_org = PATH_START + r'\raw data algemeen\vu_organogram_2.xlsx'
-path_vsnu_afids = PATH_START + r'\raw data algemeen\afids_vsnu_nonfin.csv'
+path_deals = PATH_START + '/raw data algemeen/apcdeals.csv'
+path_isn = PATH_START + '/raw data algemeen/ISN_ISSN.csv'
+path_org = PATH_START + '/raw data algemeen/vu_organogram_2.xlsx'
+path_vsnu_afids = PATH_START + '/raw data algemeen/afids_vsnu_nonfin.csv'
 vu_afids = chosen_affid
 # this is vsnu w/o phtu and such (borrowed from VSNU-SDG-data), but should approach the UKB list... good for now. update later.
 all_vsnu_sdg_afids = pd.read_csv(path_vsnu_afids).iloc[:,1].astype('str').to_list()
@@ -288,7 +288,7 @@ class ScopusPerYear(luigi.Task):
         :rtype: object (:py:class:`luigi.target.Target`)
         """
 
-        return luigi.LocalTarget(PATH_START_PERSONAL + '\luigi\data\scopus_years_%s_%s.pkl' % (self.yr, self.qr))
+        return luigi.LocalTarget(PATH_START_PERSONAL + '/luigi/data/scopus_years_%s_%s.pkl' % (self.yr, self.qr))
 
 
 class AddYearAndMonth(luigi.Task):
@@ -299,7 +299,7 @@ class AddYearAndMonth(luigi.Task):
     qr = luigi.Parameter()
 
     def output(self):
-        return luigi.LocalTarget(PATH_START_PERSONAL + '\luigi\data\scopus_years_dated_%s_%s.pkl' % (self.yr, self.qr))
+        return luigi.LocalTarget(PATH_START_PERSONAL + '/luigi/data/scopus_years_dated_%s_%s.pkl' % (self.yr, self.qr))
 
     def requires(self):
         return ScopusPerYear(yr=self.yr, qr=self.qr)

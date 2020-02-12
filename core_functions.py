@@ -1349,7 +1349,7 @@ def add_abstract_to_scopus(start_path,
     """
     #
     # get scopus pkl file
-    df_pickle = pd.read_pickle(start_path + r'\scopus_processed\pickle_OA_VU' \
+    df_pickle = pd.read_pickle(start_path + '/scopus_processed/pickle_OA_VU' \
                                + str(year) + '_met_corresponding_authors.pkl')
     # make abstract text and clean it
     df_pickle['abstract_text'] = df_pickle.apply(get_abstract_if_any, axis=1)
@@ -1363,7 +1363,7 @@ def add_abstract_to_scopus(start_path,
         print('merge issue: df_pickle for abstract text has some null eids')
     #
     # read scopus
-    df_k = pd.read_csv(start_path + r'\scopus_processed\knip_OA_VU' + str(
+    df_k = pd.read_csv(start_path + '/scopus_processed/knip_OA_VU' + str(
         year) + '_met_corresponding_authors.csv')
     #
     # merge with scopus
@@ -1373,7 +1373,7 @@ def add_abstract_to_scopus(start_path,
     #
     # save it
     if do_save_csv:
-        df_m.to_csv(start_path + r'\scopus_processed\knip_OA_VU' \
+        df_m.to_csv(start_path + '/scopus_processed/knip_OA_VU' \
                     + str(year) + '_met_abstract_tekst.csv')
 
     return None
@@ -1620,7 +1620,7 @@ def prepare_combined_data(start_path,
                          skip_preprocessing_pure_instead_load_cache=False,  # safe
                          remove_ultra_rare_class_other=True,
                          path_pw=PATH_START_PERSONAL,
-                         org_info=pd.read_excel( PATH_START + r'raw data algemeen\vu_organogram_2.xlsx', skiprows=0)):
+                         org_info=pd.read_excel( PATH_START + 'raw data algemeen/vu_organogram_2.xlsx', skiprows=0)):
     """
     This function prepares the combined data for a chosen year_range
     The raw pure files and processed scopus files per year should be available
@@ -1648,10 +1648,10 @@ def prepare_combined_data(start_path,
     # 1A. wrap immutable parameters
     year_range = list(year_range)
     # 1B. load xpure user/pass
-    host = pd.read_csv(path_pw + r'\password_xpure.csv').host[0]
-    database = pd.read_csv(path_pw + r'\password_xpure.csv').database[0]
-    user = pd.read_csv(path_pw + r'\password_xpure.csv').user[0]
-    pw = pd.read_csv(path_pw + r'\password_xpure.csv').pw[0]
+    host = pd.read_csv(path_pw + '/password_xpure.csv').host[0]
+    database = pd.read_csv(path_pw + '/password_xpure.csv').database[0]
+    user = pd.read_csv(path_pw + '/password_xpure.csv').user[0]
+    pw = pd.read_csv(path_pw + '/password_xpure.csv').pw[0]
 
     # 2. add abstract
     if add_abstract:
@@ -1669,9 +1669,9 @@ def prepare_combined_data(start_path,
     df_s_multi_year = pd.DataFrame()
     # df_t is always multi-year
     for year in year_range:
-        path_pure_unprocessed = start_path + r'\pure_raw\vu' + str(year) + '_public_raw.xls'
-        path_scopus = start_path + r'\scopus_processed\knip_OA_VU' + str(year) + scopus_variant
-        path_to_save_or_load_processed_pure = start_path + r'\pure_processed\processed_pure' + str(year) + '.csv'
+        path_pure_unprocessed = start_path + '/pure_raw/vu' + str(year) + '_public_raw.xls'
+        path_scopus = start_path + '/scopus_processed/knip_OA_VU' + str(year) + scopus_variant
+        path_to_save_or_load_processed_pure = start_path + '/pure_processed/processed_pure' + str(year) + '.csv'
 
         # 3.1: get processed pure data
         # pre-process the pure data or load a cache
@@ -1683,7 +1683,7 @@ def prepare_combined_data(start_path,
             df_p_unprocessed = pd.read_excel(path_pure_unprocessed)
             df_p = pre_process_pure_data(df=df_p_unprocessed,
                                          org_info=org_info,
-                                         path_to_save=start_path + r'\pure_processed\processed_pure' + str(year) + '.csv',
+                                         path_to_save=start_path + '/pure_processed/processed_pure' + str(year) + '.csv',
                                          test_mode_upw=True,  # True avoids waste since our enriched scopus has it too
                                          do_save=True)  # just always save
 
@@ -1724,14 +1724,14 @@ def prepare_combined_data(start_path,
         df_combined = df_combined[
             df_combined.ff_match != 'VU - Other Units']  # prevent issues with a brand new ultra-rare class please
         # overwrite it
-        df_combined.to_csv(start_path + r'\merged_data\df_total.csv')
-        df_combined.to_pickle(start_path + r'\merged_data\df_total.pkl')
+        df_combined.to_csv(start_path + '/merged_data/df_total.csv')
+        df_combined.to_pickle(start_path + '/merged_data/df_total.pkl')
 
     # 5: save the full data
     df_combined.to_csv(start_path +
-        r'\merged_data\df_total.csv')
+        '/merged_data/df_total.csv')
     df_combined.to_pickle(start_path +
-        r'\merged_data\df_total.pkl')
+        '/merged_data/df_total.pkl')
 
     # 6. return the verified middle year (which does not suffer from cross-year issue)
     #    Remember that you must do a fresh run if you want any different year range !
@@ -1759,17 +1759,17 @@ def prepare_combined_data(start_path,
                                               (df_combined.scopus_year == chosen_year)]
                                   )
                           )
-        df_chosen_year.to_pickle(start_path + r'\merged_data\df_total' + str(chosen_year) + '.pkl')
-        df_chosen_year.to_csv(start_path + r'\merged_data\df_total' + str(chosen_year) + '.csv')
+        df_chosen_year.to_pickle(start_path + '/merged_data/df_total' + str(chosen_year) + '.pkl')
+        df_chosen_year.to_csv(start_path + '/merged_data/df_total' + str(chosen_year) + '.csv')
 
     # 7. isolate unmerged for soft-title-matching: [ notice we do this post-everything to allow early-access-data]
     # df_unmerged = df_combined[(df_combined.merge_source != 'both')]
-    # df_unmerged.to_csv(start_path + r'\merged_data\df_unmerged.csv')
+    # df_unmerged.to_csv(start_path + '/merged_data/df_unmerged.csv')
     df_unmerged_pure = df_combined[df_combined.merge_source == 'pure']
     df_unmerged_scopus = df_combined[df_combined.merge_source == 'scopus']
     # save to csv
-    df_unmerged_pure.to_csv(start_path + r'\df_unmerged_pure.csv')  # equivalent to df_combined/ms=pure
-    df_unmerged_scopus.to_csv(start_path + r'\df_unmerged_scopus.csv')  # equivalent to df_combined/ms=scopus
+    df_unmerged_pure.to_csv(start_path + '/df_unmerged_pure.csv')  # equivalent to df_combined/ms=pure
+    df_unmerged_scopus.to_csv(start_path + '/df_unmerged_scopus.csv')  # equivalent to df_combined/ms=scopus
 
     # 8. you can now run STM with its current settings
     #
