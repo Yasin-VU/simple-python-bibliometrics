@@ -1,7 +1,11 @@
 
-# this is a work in progress to organize all different functions into an ETL pipeline in order to provide an overview
-# basically it does exactly the same, but is easier to overview, to fix, and allows for ETL-functions*
-# * like skipping where data is already available and scheduling and advanced error logs, etc
+# Goal: make a data pipeline to make the package even more user-friendly
+# 
+# Current status: multiple functions must be run in correct order to get data
+#                 so getting data may require multiple function calls
+# Target status:  just indicate which dataset you need and luigi does the rest
+#                 also more robust, with caches, schedulable
+\
 
 
 # my_module.py, available in your sys.path
@@ -20,11 +24,15 @@ from core_functions import get_today_for_pubdatetxt_integers
 from core_functions import get_contact_point
 from core_functions import add_year_and_month
 from core_functions import get_scopus_abstract_info
-from core_functions import get_first_chosen_affiliation_author  # ! i want all vu authors now : )
+from core_functions import get_first_chosen_affiliation_author  
 from core_functions import add_unpaywall_columns
 from core_functions import my_timestamp
 from core_functions import add_deal_info
-from core_functions import add_abstract_columns, add_author_info_columns, add_faculty_info_columns, fn_cats, renames
+from core_functions import add_abstract_columns
+from core_functions import add_author_info_columns
+from core_functions import add_faculty_info_columns
+from core_functions import fn_cats
+from core_functions import renames
 from nlp_functions import faculty_finder
 from nlp_functions import corresponding_author_functions
 import pickle
@@ -56,13 +64,9 @@ class MyTask2(luigi.Task):
 
 if False:
     if __name__ == '__main__':
-        luigi_run_result = luigi.build([MyTask1(x=10), MyTask2(x=15, z=3)])  # , detailed_summary=True
+        luigi_run_result = luigi.build([MyTask1(x=10), MyTask2(x=15, z=3)])
         print(luigi_run_result)
 
-# now I want an unpaywall task : )
-# PS: notice that you need cron/windows scheduler to run this orchestrator py file
-#     however, that can be set up easily, and right now I first want to tackle the biggest issue
-#     which is not pressing 'go' manually once in a while, but rather the pipeline being in multiple places
 
 
 class Streams(luigi.Task):
@@ -75,7 +79,8 @@ class Streams(luigi.Task):
 
     def run(self):
         """
-        Generates bogus data and writes it into the :py:meth:`~.Streams.output` target.
+        Generates bogus data and writes 
+        it into the :py:meth:`~.Streams.output` target.
         """
         with self.output().open('w') as output:
             for _ in range(1000):
@@ -87,12 +92,15 @@ class Streams(luigi.Task):
     def output(self):
         """
         Returns the target output for this task.
-        In this case, a successful execution of this task will create a file in the local file system.
+        In this case, a successful execution of this task will create a file 
+        in the local file system.
         :return: the target output for this task.
         :rtype: object (:py:class:`luigi.target.Target`)
         """
 
-        return luigi.LocalTarget(PATH_START_PERSONAL + '/luigi/data/streams_faked_%s.tsv' % self.date)  # no date...
+        return luigi.LocalTarget(PATH_START_PERSONAL + 
+                                 '/luigi/data/streams_faked_%s.tsv' 
+                                 % self.date)  # no date...
 
 
 class Streams_scopus(luigi.Task):
@@ -105,7 +113,8 @@ class Streams_scopus(luigi.Task):
 
     def run(self):
         """
-        Generates data and writes it into the :py:meth:`~.Streams.output` target.
+        Generates data and writes it into the 
+        :py:meth:`~.Streams.output` target.
         """
 
         mini_test = True
@@ -114,10 +123,15 @@ class Streams_scopus(luigi.Task):
         cur_mon = self.yr
         cur_year = self.mn
 
-        scopus_date_string = get_today_for_pubdatetxt_integers(cur_year, cur_mon)
+        scopus_date_string = get_today_for_pubdatetxt_integers(cur_year, 
+                                                               cur_mon)
 
         VU_with_VUMC_affid = "(   AF-ID(60001997) OR    AF-ID(60008734) OR AF-ID(60029124) OR AF-ID(60012443) OR AF-ID(60109852) OR AF-ID(60026698) OR AF-ID(60013779) OR AF-ID(60032886) OR AF-ID(60000614) OR AF-ID(60030550) OR AF-ID(60013243) OR AF-ID(60026220))"
-        my_query = VU_with_VUMC_affid + ' AND ' + "PUBDATETXT( " + scopus_date_string + " )"  # RECENT(1) is somehow very slow
+        my_query = (VU_with_VUMC_affid 
+                    + ' AND ' 
+                    + "PUBDATETXT( " 
+                    + scopus_date_string + " )")  
+        # RECENT(1) is somehow very slow
         if mini_test:
             my_query = "TITLE(DATA) AND " + my_query
 
@@ -225,6 +239,7 @@ vu_afids = chosen_affid
 all_vsnu_sdg_afids = pd.read_csv(path_vsnu_afids).iloc[:,1].astype('str').to_list()
 #
 # end of settings
+
 
 # now step by step push into an ETL-form in order to be able to easily skip steps during testing
 
@@ -414,9 +429,28 @@ AddDealColumns = partial(AddX,
 """
 # afterwards steps 8, 9, 10, 11, 12...
                          
-                         
-                         
-# what about this now with extra param: df = add_author_info_columns(df, chosen_affid), an extra dict_pass? scope?
+# the steps after 12 need to be plotted
+# so what does happen next?:
+#
+# A. the PURE integration
+# A1. pure read in and preprocess
+# A2. pure scopus-steps replication including skipping unpaywall [refactor!]
+# A3. 3-method merger scopus and pure
+# A4. STM postmerge merger
+# A5. columndistiller
+# that ends the data for theoretic product 1
+# but there are more routes
+# there is the ML route as well, that one is also useful (think faculty finder)
+# there is also the topic_analysis route, that one is clean and perhaps shareable?
+#
+# B. ?
+
+
+
+# PS: the database functions need to be generalized s.t. ppl can plug own server
+#     or use flat-files instead [preferred]
+  
+
 
 ######################################
 
