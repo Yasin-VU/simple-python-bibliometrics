@@ -1,7 +1,11 @@
 # Core functions
 #
-# this file contains reusable core functions like filtering on university and adding year and month name info
+# this file contains reusable core functions like filtering on university 
+# and adding year and month name info
 # these are functions which are generally used in every product
+
+# roadmap: I want to push all functions from loose function 
+# to functions combined in classgroups
 
 
 from nlp_functions import remove_punctuation
