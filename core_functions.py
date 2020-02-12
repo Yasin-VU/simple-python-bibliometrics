@@ -493,7 +493,7 @@ def appender(func, cur_id_name='doi'):
     def decorator_appender(func):
         @functools.wraps(func)
         def wrapper_appender(df_in, silent=True, cut_dupes=False, avoid_double_work=True,
-                             multi_thread=False, my_requests=None, allow_session_creation=True):
+                             multi_thread=True, my_requests=None, allow_session_creation=True):
 
 
             if cur_id_name == 'eid':
@@ -560,6 +560,18 @@ def crystal_unpaywall(cur_id, my_requests):
         in_file.close()
     else:
         r = my_requests.get("https://api.unpaywall.org/" + str(cur_id) + "?email=" + UNPAYWALL_EMAIL)  # force string
+        # keep multi_thread to 16 to avoid issues with local computer and in rare occasions the api returns
+        # this try making the code 10x slower
+        """        
+        try:
+            r = my_requests.get("https://api.unpaywall.org/" + str(cur_id) + "?email=" + UNPAYWALL_EMAIL)  # force string
+        except:
+            print('request failed hard for unpaywall, filling blank')
+            in_file = open(PATH_STATIC_RESPONSES, 'rb')
+            r = pickle.load(in_file)
+            in_file.close()
+            
+        """
 
     return r, relevant_keys, cur_id_lower, prepend, id_type
 
