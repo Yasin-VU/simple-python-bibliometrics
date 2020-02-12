@@ -61,7 +61,10 @@ def filter_on_uni(df_in, affiliation_column, cur_uni, affiliation_dict_basic):
     """
 
     # now the return has all info per university
-    return df_in[df_in.apply(lambda x: not (set(x[affiliation_column].split(', '))
+    # ! scival may change their delimiters here, so please check once a while if it works as intended
+    # put an extra check here to be safe
+
+    return df_in[df_in.apply(lambda x: not (set(x[affiliation_column].split('| '))
                                             .isdisjoint(set(affiliation_dict_basic[cur_uni]))), axis=1)]
 
 
