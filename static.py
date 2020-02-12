@@ -5,6 +5,7 @@
 # all variables in static.py must be full-uppercase
 
 
+USE_MULTI_THREAD_DEFAULT = True  # does nothing for now
 
 PATH_START = '/media/sf_Data_RI/'  #'G:/UBVU/Data_RI/'
 PATH_START_PERSONAL = 'C:/Users/yasin/Desktop/git'

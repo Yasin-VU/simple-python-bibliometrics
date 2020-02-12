@@ -4,8 +4,8 @@
 # the file is separate to prevent unnecessary loading of NLP packages and isolate issues when they occur
 
 
-from static import PATH_START, PATH_START_PERSONAL
-from static import PATH_START_SERVER , PATH_START_PERSONAL_SERVER
+#from static import PATH_START, PATH_START_PERSONAL
+#from static import PATH_START_SERVER , PATH_START_PERSONAL_SERVER
 import pandas as pd
 import numpy as np
 import editdistance  # third-party, I need a checker for this to default to regular or local levenschtein (care 0=best)
