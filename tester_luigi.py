@@ -326,7 +326,7 @@ class AddX(luigi.Task):
     out_path_name_prefix = luigi.Parameter()
     required_luigi_class = luigi.Parameter()
     processing_function = luigi.Parameter()
-    processing_args = luigi.ListParameter()
+    processing_args = luigi.Parameter()  # hash
 
     def output(self):
         return luigi.LocalTarget(PATH_START_PERSONAL
@@ -350,10 +350,13 @@ class AddX(luigi.Task):
         #
         proc_fn = pickle.loads(self.processing_function)
         #
+
+        proc_args = pickle.loads(self.processing_args) #self.processing_args  #
+
         #print(self.processing_args)
-        if len(self.processing_args) > 0:
+        if len(proc_args) > 0:
             arg_fn = []
-            for element in self.processing_args:
+            for element in proc_args:
                 #print(element)
                 if (type(element) is tuple):
                     element = list(element)
@@ -378,7 +381,7 @@ AddAbstractColumns = partial(AddX,
                              out_path_name_prefix='scopus_years_abs',
                              required_luigi_class=pickle.dumps(ScopusPerYear),
                              processing_function=pickle.dumps(add_abstract_columns),
-                             processing_args=[]
+                             processing_args=pickle.dumps([])
                              )
 
 
@@ -388,23 +391,27 @@ AddAuthorInfoColumns = partial(AddX,
                              out_path_name_prefix='scopus_years_au',
                              required_luigi_class=pickle.dumps(AddAbstractColumns),
                              processing_function=pickle.dumps(add_author_info_columns),
-                             processing_args=[[*chosen_affid + ['0']]]  # quick-fix for luigi tuple issue
+                             processing_args=pickle.dumps([[*chosen_affid + ['0']]])  # quick-fix for luigi tuple issue
                              )
 
 
-# untested, just prepped:
 
-"""
-# we might need a serializer for processing_args as well (!)
+
+
 org_info = pd.read_excel(path_org, skiprows=0)
 ff = faculty_finder(organizational_chart=org_info)
 AddFFColumns = partial(AddX,
                          out_path_name_prefix='scopus_years_ff',
                          required_luigi_class=pickle.dumps(AddAuthorInfoColumns),
                          processing_function=pickle.dumps(add_faculty_info_columns),
-                         processing_args=[ff]
+                         processing_args=pickle.dumps([ff])
                          )
-                          
+
+
+# untested, just prepped: see below
+
+"""
+
 # ! chk if passing booleans works as intended for future                          
 AddUnpaywallColumns = partial(AddX,
                          out_path_name_prefix='scopus_years_upw',
@@ -454,15 +461,24 @@ AddDealColumns = partial(AddX,
 
 ######################################
 
+qq=1
+qq+=1
+
+
+
 year_range = [2017, 2018]
 if __name__ == '__main__':
     #luigi_run_result = luigi.build([ScopusPerYear(yr=2020, qr='TITLE(TENSOR data)')])  # date=datetime.date.today(),
 
     #luigi_run_result = luigi.build([AddAbstractColumns(yr=2020, qr='TITLE(TENSOR data)')])
 
-    luigi_run_result = luigi.build([AddAuthorInfoColumns(yr=2020, qr=' AF-ID(60008734) AND TITLE(DATA) ')])
+    #luigi_run_result = luigi.build([AddAuthorInfoColumns(yr=2020, qr=' AF-ID(60008734) AND TITLE(DATA) ')])
 
+    luigi_run_result = luigi.build([AddFFColumns(yr=2020, qr=' AF-ID(60008734) AND TITLE(DATA) ')])
     print(luigi_run_result)
+
+
+
 
 
 # luigi design
