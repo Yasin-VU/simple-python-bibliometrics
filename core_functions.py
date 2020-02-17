@@ -27,6 +27,7 @@ from pybliometrics.scopus import AbstractRetrieval
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import ProcessPoolExecutor
 from functools import partial
+### from functools import wraps
 import time
 from datetime import datetime  # new
 from datetime import timedelta
@@ -539,10 +540,10 @@ def appender(func, cur_id_name='doi'):
 
 
 
-#@appender
-#@faster
-#@check_errors_and_parse_outputs
-#@check_id_validity
+@appender
+@faster
+@check_errors_and_parse_outputs
+@check_id_validity
 def crystal_unpaywall(cur_id, my_requests):
     # always use cur_id, my_requests for in and r, relevant_keys for out
     # id is either cur_doi or 'invalid' if invalid
@@ -580,11 +581,54 @@ def crystal_unpaywall(cur_id, my_requests):
     return r, relevant_keys, cur_id_lower, prepend, id_type
 
 
+add_unpaywall_columns = crystal_unpaywall  # the final function goes through the new pipe
+
+
 # recreate the legacy unpaywall functions for now
 #
-fn_get_upw_info = check_errors_and_parse_outputs(check_id_validity(crystal_unpaywall))
-fn_get_all_upw_info = faster(fn_get_upw_info)
-add_unpaywall_columns = appender(fn_get_all_upw_info)
+def legacy_crystal_unpaywall(cur_id, my_requests):
+    # always use cur_id, my_requests for in and r, relevant_keys for out
+    # id is either cur_doi or 'invalid' if invalid
+
+    prepend = 'upw_'
+    id_type = 'doi'
+    cur_id_lower = cur_id.lower()
+
+    if my_requests is None:
+        my_requests = requests  # avoids passing requests around everytime
+
+    relevant_keys = ['free_fulltext_url',
+                     'is_boai_license', 'is_free_to_read', 'is_subscription_journal',
+                     'license', 'oa_color']  # , 'doi', 'doi_lowercase'  : you get these from callers
+    if cur_id == 'invalid':
+        # get the invalid-doi-response directly from disk to save time, you can run update_api_statics to update it
+        in_file = open(PATH_STATIC_RESPONSES, 'rb')
+        r = pickle.load(in_file)
+        in_file.close()
+    else:
+        r = my_requests.get("https://api.unpaywall.org/" + str(cur_id) + "?email=" + UNPAYWALL_EMAIL)  # force string
+        # keep multi_thread to 16 to avoid issues with local computer and in rare occasions the api returns
+        # this try making the code 10x slower
+        """        
+        try:
+            r = my_requests.get("https://api.unpaywall.org/" + str(cur_id) + "?email=" + UNPAYWALL_EMAIL)  # force string
+        except:
+            print('request failed hard for unpaywall, filling blank')
+            in_file = open(PATH_STATIC_RESPONSES, 'rb')
+            r = pickle.load(in_file)
+            in_file.close()
+
+        """
+
+    return r, relevant_keys, cur_id_lower, prepend, id_type
+fn_get_upw_info = check_errors_and_parse_outputs(check_id_validity(legacy_crystal_unpaywall))  # avoid, legacy
+fn_get_all_upw_info = faster(fn_get_upw_info)  # these are only for legacy and should be avoided
+###add_unpaywall_columns = appender(fn_get_all_upw_info)  # the final function goes through the new pipe
+#
+# I do not like this kind of handling as it breaks some functools functionality
+# I will refactor legacy code later some time
+
+
 
 
 @appender
@@ -622,8 +666,7 @@ def crystal_altmetric(cur_id, my_requests):
         r = my_requests.get(url, params={}, headers={})
 
     return r, relevant_keys, cur_id_lower, prepend, id_type
-add_altmetric_columns = crystal_altmetric  # test me
-
+add_altmetric_columns = crystal_altmetric
 
 
 ###@appender(cur_id_name='eid')

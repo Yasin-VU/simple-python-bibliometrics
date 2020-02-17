@@ -25,7 +25,7 @@ from core_functions import get_contact_point
 from core_functions import add_year_and_month
 from core_functions import get_scopus_abstract_info
 from core_functions import get_first_chosen_affiliation_author  
-from core_functions import add_unpaywall_columns
+from core_functions import add_unpaywall_columns, add_altmetric_columns
 from core_functions import my_timestamp
 from core_functions import add_deal_info
 from core_functions import add_abstract_columns
@@ -410,17 +410,17 @@ AddFFColumns = partial(AddX,
 
 # untested, just prepped: see below
 
-"""
 
-# ! chk if passing booleans works as intended for future                          
 AddUnpaywallColumns = partial(AddX,
                          out_path_name_prefix='scopus_years_upw',
                          required_luigi_class=pickle.dumps(AddFFColumns),
                          processing_function=pickle.dumps(add_unpaywall_columns),
-                         processing_args=[False]
+                         processing_args=pickle.dumps([False])
                          )
-                             
 
+#### do other decos work? add_unpaywall_columns add_altmetric_columns
+
+"""
 # we need a wrapper for this to bring it to the same form as add_author_info_columns
 # afterwards move it to core_functions
 def add_deal_info_columns():
@@ -434,6 +434,7 @@ AddDealColumns = partial(AddX,
                          processing_args=[path_deals, path_isn]
                          )
 """
+
 # afterwards steps 8, 9, 10, 11, 12...
                          
 # the steps after 12 need to be plotted
@@ -474,7 +475,7 @@ if __name__ == '__main__':
 
     #luigi_run_result = luigi.build([AddAuthorInfoColumns(yr=2020, qr=' AF-ID(60008734) AND TITLE(DATA) ')])
 
-    luigi_run_result = luigi.build([AddFFColumns(yr=2020, qr=' AF-ID(60008734) AND TITLE(DATA) ')])
+    luigi_run_result = luigi.build([AddUnpaywallColumns(yr=2020, qr=' AF-ID(60008734) AND TITLE(DATA) ')])
     print(luigi_run_result)
 
 
