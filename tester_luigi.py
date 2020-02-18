@@ -367,6 +367,7 @@ class AddX(luigi.Task):
 
         # debug
         print(df_out.head(1).T)
+        print(df_out.iloc[:, -1])
 
         ###print(df_out[['first_affil_author', 'first_affil_author_has_error', 'first_affil_author_org']])
 
@@ -418,20 +419,18 @@ AddUnpaywallColumns = partial(AddX,
 #### do other decos work? add_unpaywall_columns add_altmetric_columns
 
 
-
 # YOU ARE HERE: ISSUE: PARAMETER ORDERING MIXUP
 #
 # we need a wrapper for this to bring it to the same form as add_author_info_columns
 # afterwards move it to core_functions
-###add_deal_info_reorder = add_deal_info()
-add_deal_info_columns = partial(add_deal_info,
-                                path_deals=path_deals,
-                                path_isn=path_isn)
-#add_deal_info_columns(df)
+def add_deal_info_reorder(df_b_in, path_deals_in, path_isn_in):
+    # reorder args
+    return add_deal_info(path_deals_in, path_isn_in, df_b_in)
 
-# df = add_deal_info(path_deals=path_deals, path_isn=path_isn, df_b=df)
 
-# df = add_author_info_columns(df, chosen_affid)
+add_deal_info_columns = partial(add_deal_info_reorder,
+                                path_deals_in=path_deals,
+                                path_isn_in=path_isn)
 
 
 AddDealColumns = partial(AddX,
@@ -482,9 +481,9 @@ if __name__ == '__main__':
 
     #luigi_run_result = luigi.build([AddAuthorInfoColumns(yr=2020, qr=' AF-ID(60008734) AND TITLE(DATA) ')])
 
-    luigi_run_result = luigi.build([AddUnpaywallColumns(yr=2020, qr=' AF-ID(60008734) AND TITLE(DATA) ')])
+    #luigi_run_result = luigi.build([AddUnpaywallColumns(yr=2020, qr=' AF-ID(60008734) AND TITLE(DATA) ')])
 
-    #luigi_run_result = luigi.build([AddDealColumns(yr=2020, qr=' AF-ID(60008734) AND TITLE(DATA) ')])
+    luigi_run_result = luigi.build([AddDealColumns(yr=2020, qr=' AF-ID(60008734) AND TITLE(DATA) ')])
     print(luigi_run_result)
 
 
