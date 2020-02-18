@@ -441,7 +441,19 @@ AddDealColumns = partial(AddX,
                          )
 
 
-# afterwards steps 8, 9, 10, 11, 12...
+add_corr_aut_columns = partial(corresponding_author_functions().add_corresponding_author_info,
+                               vu_afids=vu_afids,
+                               ukb_afids=all_vsnu_sdg_afids)
+
+AddCorrAutColumns = partial(AddX,
+                            out_path_name_prefix='scopus_years_coraut',
+                            required_luigi_class=pickle.dumps(AddDealColumns),
+                            processing_function=pickle.dumps(add_corr_aut_columns),
+                            processing_args=pickle.dumps([])
+                            )
+
+
+# afterwards steps 9, 10, 11, 12...
                          
 # the steps after 12 need to be plotted
 # so what does happen next?:
@@ -483,15 +495,13 @@ if __name__ == '__main__':
 
     #luigi_run_result = luigi.build([AddUnpaywallColumns(yr=2020, qr=' AF-ID(60008734) AND TITLE(DATA) ')])
 
-    luigi_run_result = luigi.build([AddDealColumns(yr=2020, qr=' AF-ID(60008734) AND TITLE(DATA) ')])
+    # luigi_run_result = luigi.build([AddDealColumns(yr=2020, qr=' AF-ID(60008734) AND TITLE(DATA) ')])
+
+    luigi_run_result = luigi.build([AddCorrAutColumns(yr=2020, qr=' AF-ID(60008734) AND TITLE(DATA) ')])
+
     print(luigi_run_result)
 
 
-
-
-
-# luigi design
-# we have a few functions now, let's try to push some real data through?
 
 
 
@@ -528,7 +538,7 @@ df = df[fav_fields]  # cut fields
 df = df.dropna(axis=0, subset=['eid'], inplace=False)
 
 # 2. add year and month
-df = add_year_and_month(df)  # add info columns
+df = add_year_and_month(df, 'coverDate')  # add info columns
 
 # below we split up 3 routines which are wrongfully combined (refactor required)
 
@@ -567,7 +577,7 @@ df['upw_oa_color_verbose'] = df['upw_oa_color'].apply(lambda x: 'unknown' if x i
 df = renames(df)
 
 # 11. get contact person
-df['vu_contact_person'] = df.apply(get_contact_point,axis=1)
+df['vu_contact_person'] = df.apply(get_contact_point, axis=1)
 
 # 12. after this point, there is a lot going on with PURE processing, P+S merging, keuzemodel, STM(tester_STM!!),
 #     and more stuff (partially in production, partially not yet)
@@ -576,13 +586,7 @@ df['vu_contact_person'] = df.apply(get_contact_point,axis=1)
 
 df.head()
 
-
-
-
-
-
-
-
+# check op punten -> kommas voor PBI issues !
 
 
 
