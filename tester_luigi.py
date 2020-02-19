@@ -308,8 +308,8 @@ class AddYearAndMonth(luigi.Task):
 
         # input and processing phase
         input = self.input()  # should be just 1 for this routine
-            df = pd.read_pickle(input.path) #, index=False, encoding='utf-8')
-            df = add_year_and_month(df, 'coverDate')  # add info columns
+        df = pd.read_pickle(input.path) #, index=False, encoding='utf-8')
+        df = add_year_and_month(df, 'coverDate')  # add info columns
 
         # output phase
         df.to_pickle(self.output().path) #, encoding='utf-8')
@@ -453,7 +453,55 @@ AddCorrAutColumns = partial(AddX,
                             )
 
 
-# afterwards steps 9, 10, 11, 12...
+def add_extra_unpaywall_columns(df_in):
+    """
+    adds extra unpaywall columns to a dataframe with unpaywall info
+    :param df: the dataframe to start with, it must have a column upw_oa_color with unpaywall colors
+    which fit the keys of fn_cats() and not have the column names upw_oa_color_category and upw_oa_color_verbose
+    :return: the same df with 2 extra columns named upw_oa_color_category and upw_oa_color_verbose,
+    which are resp. an encoded version and a version where missing values are replaced by text as 'unknown'
+    where you have to be careful with running null checks on as nulls have become plain text
+    """
+    df_in['upw_oa_color_category'] = df_in.upw_oa_color.apply(fn_cats)
+    df_in['upw_oa_color_verbose'] = df_in['upw_oa_color'].apply(lambda x: 'unknown' if x is np.nan else x)
+
+    return df_in
+
+AddXUnpaywallColumns = partial(AddX,
+                            out_path_name_prefix='scopus_years_upwx',
+                            required_luigi_class=pickle.dumps(AddCorrAutColumns),
+                            processing_function=pickle.dumps(add_extra_unpaywall_columns),
+                            processing_args=pickle.dumps([])
+                            )
+
+# ! careful ! the renames function works here because the functionality is through sheer luck compatible
+# with the functionality of 'df=add_stuff(df)', but this will generally not be the case
+# that is, if you make one with a different dataframe manipulation it may fail somewhere in the chain of functions
+# also, it might also DIRECTLY fail when we update AddX, since 'renames' does not fit in its goal-scope
+# even though it 'works' right now
+# take home message: please only use AddX for add_X_columns types of functions, and edit this out some day (marked '!')
+Renames = partial(AddX,
+                  out_path_name_prefix='scopus_years_renamed',
+                  required_luigi_class=pickle.dumps(AddXUnpaywallColumns),
+                  processing_function=pickle.dumps(renames),
+                  processing_args=pickle.dumps([])
+                  )
+
+
+def add_contact_person_columns(df_in):
+    df_in['vu_contact_person'] = df_in.apply(get_contact_point, axis=1)
+    return df_in
+
+AddContactPersonColumns = partial(AddX,
+                                  out_path_name_prefix='scopus_years_complete',
+                                  required_luigi_class=pickle.dumps(Renames),
+                                  processing_function=pickle.dumps(add_contact_person_columns),
+                                  processing_args=pickle.dumps([])
+                                  )
+
+# this wraps steps 1-11 :)  !
+
+
                          
 # the steps after 12 need to be plotted
 # so what does happen next?:
@@ -497,7 +545,7 @@ if __name__ == '__main__':
 
     # luigi_run_result = luigi.build([AddDealColumns(yr=2020, qr=' AF-ID(60008734) AND TITLE(DATA) ')])
 
-    luigi_run_result = luigi.build([AddCorrAutColumns(yr=2020, qr=' AF-ID(60008734) AND TITLE(DATA) ')])
+    luigi_run_result = luigi.build([AddContactPersonColumns(yr=2020, qr=' AF-ID(60008734) AND TITLE(DATA) ')])
 
     print(luigi_run_result)
 
@@ -570,6 +618,7 @@ df = (corresponding_author_functions()
                                      ukb_afids=all_vsnu_sdg_afids))
 
 # 9. post-process unpaywall
+# these are NEW column names so you can use an add_ function
 df['upw_oa_color_category'] = df.upw_oa_color.apply(fn_cats)
 df['upw_oa_color_verbose'] = df['upw_oa_color'].apply(lambda x: 'unknown' if x is np.nan else x)
 
