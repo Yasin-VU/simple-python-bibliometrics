@@ -307,7 +307,7 @@ class AddYearAndMonth(luigi.Task):
     def run(self):
 
         # input and processing phase
-        for input in self.input():  # should be just 1 for this routine
+        input = self.input()  # should be just 1 for this routine
             df = pd.read_pickle(input.path) #, index=False, encoding='utf-8')
             df = add_year_and_month(df, 'coverDate')  # add info columns
 
@@ -380,7 +380,7 @@ AddAbstractColumns = partial(AddX,
                              # yr=2020,
                              # qr='TITLE(TENSOR data)',
                              out_path_name_prefix='scopus_years_abs',
-                             required_luigi_class=pickle.dumps(ScopusPerYear),
+                             required_luigi_class=pickle.dumps(AddYearAndMonth),
                              processing_function=pickle.dumps(add_abstract_columns),
                              processing_args=pickle.dumps([])
                              )
