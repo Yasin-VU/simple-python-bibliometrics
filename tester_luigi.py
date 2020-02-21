@@ -528,7 +528,7 @@ class MultiScopusEndPoint(luigi.Task):
                                   + '_%s_%s.pkl' % (str(self.year_range), self.qr))
 
     def requires(self):
-        return [AddContactPersonColumns(yr=year, qr=self.qr) for year in self.year_range]
+        return [AddAltmetricColumns(yr=year, qr=self.qr) for year in self.year_range]
 
     def run(self):
 
