@@ -291,7 +291,7 @@ class ScopusPerYear(luigi.Task):
         :rtype: object (:py:class:`luigi.target.Target`)
         """
 
-        return luigi.LocalTarget(PATH_START_PERSONAL + '/luigi/data/scopus_years_%s_%s.pkl' % (self.yr, self.qr))
+        return luigi.LocalTarget(PATH_START_PERSONAL + '/luigi/data/scopus_years_%s_%s.pkl' % (self.yr, hash(self.qr)))
 
 
 class AddYearAndMonth(luigi.Task):
@@ -302,7 +302,7 @@ class AddYearAndMonth(luigi.Task):
     qr = luigi.Parameter()
 
     def output(self):
-        return luigi.LocalTarget(PATH_START_PERSONAL + '/luigi/data/scopus_years_dated_%s_%s.pkl' % (self.yr, self.qr))
+        return luigi.LocalTarget(PATH_START_PERSONAL + '/luigi/data/scopus_years_dated_%s_%s.pkl' % (self.yr, hash(self.qr)))
 
     def requires(self):
         return ScopusPerYear(yr=self.yr, qr=self.qr)
@@ -335,7 +335,7 @@ class AddX(luigi.Task):
         return luigi.LocalTarget(PATH_START_PERSONAL
                                   + '/luigi/data/'
                                   + self.out_path_name_prefix
-                                  + '_%s_%s.pkl' % (self.yr, self.qr))
+                                  + '_%s_%s.pkl' % (self.yr, hash(self.qr)))
 
     def requires(self):
         req_fn = pickle.loads(self.required_luigi_class)
@@ -525,7 +525,7 @@ class MultiScopusEndPoint(luigi.Task):
         return luigi.LocalTarget(PATH_START_PERSONAL
                                   + '/luigi/data/'
                                   + 'scopus_multi'
-                                  + '_%s_%s.pkl' % (str(self.year_range), self.qr))
+                                  + '_%s_%s.pkl' % (str(self.year_range), hash(self.qr)))
 
     def requires(self):
         return [AddAltmetricColumns(yr=year, qr=self.qr) for year in self.year_range]
