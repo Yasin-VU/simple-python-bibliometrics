@@ -606,6 +606,7 @@ if __name__ == '__main__':
     # so let's just do 10 years then.
     # PS: it will be slow, because abstract is not multithreaded (didn't validate sufficiently for this scope)
     # so it will take 24h for abstract I think, the rest should be faster so maybe 2 full days?
+    import time
     start = time.time()
     print(start)
     print(VU_with_VUMC_affid)
