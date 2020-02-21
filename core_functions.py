@@ -1,23 +1,23 @@
 # Core functions
 #
-# this file contains reusable core functions like filtering on university 
+# this file contains reusable core functions like filtering on university
 # and adding year and month name info
 # these are functions which are generally used in every product
 
-# roadmap: I want to push all functions from loose function 
+# roadmap: I want to push all functions from loose function
 # to functions combined in classgroups
 
 
 from nlp_functions import remove_punctuation
 from nlp_functions import get_abstract_if_any
 from nlp_functions import comma_space_fix
-from static import PATH_START, PATH_START_PERSONAL
-from static import PATH_START_SERVER , PATH_START_PERSONAL_SERVER
-from static import UNPAYWALL_EMAIL
-from static import PATH_STATIC_RESPONSES
-from static import PATH_STATIC_RESPONSES_ALTMETRIC
-from static import PATH_STATIC_RESPONSES_SCOPUS_ABS
-from static import MAX_NUM_WORKERS  # not used everywhere so care
+#from static import PATH_START, PATH_START_PERSONAL
+#from static import PATH_START_SERVER , PATH_START_PERSONAL_SERVER
+#from static import UNPAYWALL_EMAIL
+#from static import PATH_STATIC_RESPONSES
+#from static import PATH_STATIC_RESPONSES_ALTMETRIC
+#from static import PATH_STATIC_RESPONSES_SCOPUS_ABS
+#from static import MAX_NUM_WORKERS  # not used everywhere so care
 import pandas as pd
 import calendar
 import numpy as np
@@ -41,6 +41,24 @@ from unittest.mock import Mock
 from requests.models import Response
 #import sys
 from nlp_functions import faculty_finder
+from pybliometrics.scopus import config
+from pybliometrics.scopus.exception import Scopus429Error
+import static
+
+
+def overloaded_abstract_retrieval(identifier, view='FULL', refresh=True, id_type='eid'):
+    """
+    The only thing this extra layer does is swap api-keys on error 429
+    Any multi-threading etc is done elsewhere (and may need its own testing as always)
+    """
+    try:
+        res = AbstractRetrieval(identifier=identifier, view=view, refresh=refresh, id_type=id_type)
+    except Scopus429Error:
+        # Use the last item of _keys, drop it and assign it as
+        # current API key
+        config["Authentication"]["APIKey"] = static.SCOPUS_KEYS.pop()
+        res = AbstractRetrieval(identifier=identifier, view=view, refresh=refresh, id_type=id_type)
+    return res
 
 
 def make_doi_list_from_csv(source_path, output_path, do_return=True):
@@ -143,7 +161,7 @@ def get_scopus_abstract_info(paper_eid):
         error = True
     else:
         try:
-            ab = AbstractRetrieval(identifier=paper_eid, view='FULL', refresh=True, id_type='eid')
+            ab = overloaded_abstract_retrieval(identifier=paper_eid, view='FULL', refresh=True, id_type='eid')
         except:
             error = True
             error_message = 'abstract api error'
@@ -172,17 +190,17 @@ def split_scopus_subquery_affils(subquery_affils, number_of_splits=4,
                                  subquery_time = ''):
     """
     ! This function needs testing
-    
+
     This function takes in subquery_affils from make_affiliation_dicts_afids()
     and translates it into a list of subqueries to avoid query length limits
-    
+
     in: subquery_affils from make_affiliation_dicts_afids()
         number_of_splits: an integer between 2 and 10
         subquery_time: an optional query to paste after every subquery
-        
+
     out: a list of subqueries to constrain scopussearch to a subset of affils
          during stacking be sure to de-duplicate (recommended on EID)
-         
+
     """
     if (number_of_splits <= 10) & (number_of_splits > 1) & (number_of_splits % 1 == 0):
         pass  # valid number_of_splits
@@ -193,12 +211,12 @@ def split_scopus_subquery_affils(subquery_affils, number_of_splits=4,
     else:
         print('invalid number_of_splits, replacing with 4')
         number_of_splits = 4
-    
+
     affil_count = len(subquery_affils.split('OR'))  # number of affiliation ids
     if affil_count <= 12:  # to avoid weird situations
         print('affil_count is small, returning single subquery')
         my_query_set = subquery_affils + subquery_time
-    else: 
+    else:
         # do it
         my_query_set = []
         step_size = int(np.floor(affil_count / number_of_splits)+1)
@@ -440,7 +458,7 @@ def faster(func):
             df_unpaywall = pd.DataFrame()
 
             if multi_thread:  # valid across session used or not
-                max_num_workers = MAX_NUM_WORKERS
+                max_num_workers = static.MAX_NUM_WORKERS
                 num_workers = np.max(
                     [1, int(np.floor(np.min([max_num_workers, np.floor(float(len(doi_list)) / 4.0)])))])
 
@@ -560,11 +578,11 @@ def crystal_unpaywall(cur_id, my_requests):
                      'license', 'oa_color']  # , 'doi', 'doi_lowercase'  : you get these from callers
     if cur_id == 'invalid':
         # get the invalid-doi-response directly from disk to save time, you can run update_api_statics to update it
-        in_file = open(PATH_STATIC_RESPONSES, 'rb')
+        in_file = open(static.PATH_STATIC_RESPONSES, 'rb')
         r = pickle.load(in_file)
         in_file.close()
     else:
-        r = my_requests.get("https://api.unpaywall.org/" + str(cur_id) + "?email=" + UNPAYWALL_EMAIL)  # force string
+        r = my_requests.get("https://api.unpaywall.org/" + str(cur_id) + "?email=" + static.UNPAYWALL_EMAIL)  # force string
         # keep multi_thread to 16 to avoid issues with local computer and in rare occasions the api returns
         # this try making the code 10x slower
         """        
@@ -602,11 +620,11 @@ def legacy_crystal_unpaywall(cur_id, my_requests):
                      'license', 'oa_color']  # , 'doi', 'doi_lowercase'  : you get these from callers
     if cur_id == 'invalid':
         # get the invalid-doi-response directly from disk to save time, you can run update_api_statics to update it
-        in_file = open(PATH_STATIC_RESPONSES, 'rb')
+        in_file = open(static.PATH_STATIC_RESPONSES, 'rb')
         r = pickle.load(in_file)
         in_file.close()
     else:
-        r = my_requests.get("https://api.unpaywall.org/" + str(cur_id) + "?email=" + UNPAYWALL_EMAIL)  # force string
+        r = my_requests.get("https://api.unpaywall.org/" + str(cur_id) + "?email=" + static.UNPAYWALL_EMAIL)  # force string
         # keep multi_thread to 16 to avoid issues with local computer and in rare occasions the api returns
         # this try making the code 10x slower
         """        
@@ -658,7 +676,7 @@ def crystal_altmetric(cur_id, my_requests):
     # , 'doi', 'doi_lowercase'  : you get these from callers
     if cur_id == 'invalid':
         # get the invalid-doi-response directly from disk to save time, you can run update_api_statics to update it
-        in_file = open(PATH_STATIC_RESPONSES_ALTMETRIC, 'rb')
+        in_file = open(static.PATH_STATIC_RESPONSES_ALTMETRIC, 'rb')
         r = pickle.load(in_file)
         in_file.close()
     else:
@@ -699,7 +717,7 @@ def crystal_scopus_abstract(cur_id, my_requests):
     # , 'doi', 'doi_lowercase'  : you get these from callers
     if cur_id == 'invalid':
         # get the invalid-doi-response directly from disk to save time, you can run update_api_statics to update it
-        in_file = open(PATH_STATIC_RESPONSES_SCOPUS_ABS, 'rb')
+        in_file = open(static.PATH_STATIC_RESPONSES_SCOPUS_ABS, 'rb')
         r = pickle.load(in_file)
         in_file.close()
     else:
@@ -715,7 +733,7 @@ def crystal_scopus_abstract(cur_id, my_requests):
         if one_shot:
             retries = 0
             try:
-                ab = AbstractRetrieval(identifier=cur_id, view='FULL', refresh=True, id_type='eid')
+                ab = overloaded_abstract_retrieval(identifier=cur_id, view='FULL', refresh=True, id_type='eid')
                 r = Mock(spec=Response)
                 r.json.return_value = {'obje': pickle.dumps(ab), 'message': 'hi', 'retries':retries}
                 r.status_code = 999
@@ -727,7 +745,7 @@ def crystal_scopus_abstract(cur_id, my_requests):
                 # if so, fall back to invalid routine
                 #
                 # get the invalid-doi-response directly from disk to save time, you can run update_api_statics to update it
-                in_file = open(PATH_STATIC_RESPONSES_SCOPUS_ABS, 'rb')
+                in_file = open(static.PATH_STATIC_RESPONSES_SCOPUS_ABS, 'rb')
                 r = pickle.load(in_file)
                 in_file.close()
         else:
@@ -738,11 +756,11 @@ def crystal_scopus_abstract(cur_id, my_requests):
                 #retry = False  # removes retries
                 retries = retries + 1
                 try:
-                    ab = AbstractRetrieval(identifier=cur_id, view='FULL', refresh=True, id_type='eid')
+                    ab = overloaded_abstract_retrieval(identifier=cur_id, view='FULL', refresh=True, id_type='eid')
                     qq = ab.title
                     qqx = qq + 'x'
                     #
-                    # if api does not error, and we have an title, then the call is correct and we got info back successfully
+                    # if api does not error, and wepuyc have an title, then the call is correct and we got info back successfully
                     #
                     # then do rest of actions
                     r = Mock(spec=Response)
@@ -760,7 +778,7 @@ def crystal_scopus_abstract(cur_id, my_requests):
                     else:
                         retry = False
                         # prepare for exit
-                        in_file = open(PATH_STATIC_RESPONSES_SCOPUS_ABS, 'rb')
+                        in_file = open(static.PATH_STATIC_RESPONSES_SCOPUS_ABS, 'rb')
                         r = pickle.load(in_file)
                         in_file.close()
 
@@ -803,7 +821,7 @@ class api_extractor:
         self.scopus_search_info_ready = False
         self.max_num_workers = max_num_workers
 
-    def get_scopus_search_info(self, cur_query):   
+    def get_scopus_search_info(self, cur_query):
         """
         Gets the scopus search info and return it as dataframe of obj.results
         Not yet handling errors of API...
@@ -876,8 +894,8 @@ class api_extractor:
 
         df_upw = pd.DataFrame()
         df_ss = pd.DataFrame()
-                
-        if use_multi_thread:           
+
+        if use_multi_thread:
             #ss
             if skip_scopus_search is False:
                 # !!! please thoroughly test this
@@ -893,22 +911,22 @@ class api_extractor:
                     # we are appending dataframes, not series
                     df_ss = df_ss.append(cur_series, ignore_index=True)
                     ###doi_list = df_ss.doi  # check this !
-                    
-                    
+
+
             ## This is the point where parallel-api functionality should start(!)
             if use_parallel_apis:
                 1
                 # please first make the apis work in single_thread
                 # then in regular multi-thread
                 # and finally in parallel_apis_multi_thread.
-            
+
                 # 1. set sources using the skip_ arguments
                 # 2. choose max_workers using not on #dois but #dois*doi-apis + #eids*eid-apis
                 # 3. make a list with 1 element per job, including all details like
                 #    [ [doi_1,'unpaywall'], [doi_1,'unpaywall'], [eid_1,'scival']. ...]
                 # 4. push that into multi-threading, but use a different function
                 #    use the function I started below named get_parallel_api_info()
-                #    this function picks up the source in element2 in a list element and 
+                #    this function picks up the source in element2 in a list element and
                 #    directs to the right api function
                 #    this makes the code superclean to support all forms of threading
                 #    while keeping full functionality
@@ -920,7 +938,7 @@ class api_extractor:
                 # 8. do timing: how large is the speed gain quantitatively?
                 #    this is probably best to test on high-end of very-high-end machines
                 #    because we need to hit the api rate limits with serial_apis to see an effect
-            
+
             else:
                 #upw
                 if skip_unpaywall is False:
@@ -930,12 +948,12 @@ class api_extractor:
                         df_upw = df_upw.append(cur_series, ignore_index=True)
                 #if ~skip_scival:
                 #    1
-            
-            
-            
+
+
+
         else:
             # single-thread
-            
+
             # ss
             if skip_scopus_search is False:
                 # query fed separately btw
@@ -944,23 +962,23 @@ class api_extractor:
                 self.feed_scopus_search_info(scopus_search_results)  # store in properties
                 df_ss = scopus_search_results  # combining results is trivial for single-thread
                 ###doi_list = df_ss.doi  # check this !
-                
+
             # upw
             if skip_unpaywall is False:
                 for cur_doi in doi_list:
                     series_to_add = fn_get_upw_info(cur_doi)
                     df_upw = df_upw.append(series_to_add, ignore_index=True)
-        
 
-        
-            
+
+
+
         # scopussearch: the save and .self are issue for multithread, incl
         # overwrite of results properties
         # you need to fix that
         # also, the num_workers law: you need to decide that differently too
         # you prolly have 1 - 120 months, and 1 workers does 1 month a time
         # so you need like #months/3 or a comparable version of the law below
-            
+
 
 
         return df_upw, df_ss  # ! merge or combine or store properly later
@@ -974,10 +992,10 @@ class api_extractor:
 
         if source == 'unpaywall':
             series_to_add = fn_get_upw_info(cur_id)  # cur_id:cur_doi here
-            
+
         if source == 'scival':
             1
-            
+
         series_to_add = series_to_add.append(pd.Series(source_dict))
 
         return series_to_add
@@ -1010,48 +1028,48 @@ def split_query_to_months(query, silent=False):
               as the other months
     """
     # this code can be improved with regex
-    
+
     # extract years
     final_year = str(int(query.split('PUBYEAR < ')[1]) - 1)
     first_year = str(int(query.split('PUBYEAR > ')[1][0:4]) + 1)
     rest_of_query = query.split('PUBYEAR > ')[0]  # probably ending with ' AND'
-    
+
     # make year list
     years = np.arange(int(first_year), int(final_year)+1)
 
     # define month abbreviations (can split out later)
     #calendar.month_name[ value between 1 and 12]
     # example: PUBDATETXT(February 2018)
-    
+
     query_parts = []
     for year in years:
         for month_number in np.arange(1,12+1):
             if month_number == 1:
                 # january is split again in two by open access y/n
-                query_parts.append(rest_of_query 
+                query_parts.append(rest_of_query
                                    + 'PUBDATETXT('
                                    + calendar.month_name[month_number]
                                    + ' '
                                    + str(year)
                                    + ')'
                                    + ' AND OPENACCESS(1)')
-                                   
-                query_parts.append(rest_of_query 
+
+                query_parts.append(rest_of_query
                                    + 'PUBDATETXT('
                                    + calendar.month_name[month_number]
                                    + ' '
                                    + str(year)
                                    + ')'
                                    + ' AND OPENACCESS(0)')
-            else:                
-                query_parts.append(rest_of_query 
+            else:
+                query_parts.append(rest_of_query
                                    + 'PUBDATETXT('
                                    + calendar.month_name[month_number]
                                    + ' '
                                    + str(year)
                                    + ')')
     # careful with using ints and strs together
-    
+
     if ~silent:
         print('query has been split up in ' + str(len(query_parts)) + ' queries for multi-threading')
     return query_parts
@@ -1677,8 +1695,8 @@ def prepare_combined_data(start_path,
                          add_abstract=True,
                          skip_preprocessing_pure_instead_load_cache=False,  # safe
                          remove_ultra_rare_class_other=True,
-                         path_pw=PATH_START_PERSONAL,
-                         org_info=pd.read_excel( PATH_START + 'raw data algemeen/vu_organogram_2.xlsx', skiprows=0)):
+                         path_pw=static.PATH_START_PERSONAL,
+                         org_info=pd.read_excel( static.PATH_START + 'raw data algemeen/vu_organogram_2.xlsx', skiprows=0)):
     """
     This function prepares the combined data for a chosen year_range
     The raw pure files and processed scopus files per year should be available
@@ -1851,14 +1869,14 @@ def get_altmetric(row, col='cited_by_policies_count'):
     If Altmetric returns non-empty but cited_by_policies_count is missing,
     then the function returns 0
     else returns the cited_by_policies_count
-    
+
     In: DOI and col[functionality missing]
     Out: single value with either np.nan, 0, or a positive integer
     """
-    
+
     if col != 'cited_by_policies_count':
         print('functionality missing for other columns, giving policies now')
-        
+
     if not(pd.notnull(row)):
         out = np.nan
     else:

@@ -8,3 +8,5 @@ __pycache__/static.cpython-37.pyc
 .idea/
 /hidden_tryout.py
 /requirements - Copy.txt
+/minitest.py
+luigi.cfg

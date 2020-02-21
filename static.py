@@ -4,6 +4,7 @@
 # and to have the test/production-switch right here and nowhere else
 # all variables in static.py must be full-uppercase
 
+import pandas as pd
 
 USE_MULTI_THREAD_DEFAULT = True  # does nothing for now
 
@@ -15,6 +16,8 @@ PATH_START_SERVER = 'C:/Users/yasing/Desktop/oa oktober'
 
 
 PRODUCTION_MODE = False  # does nothing yet
+
+SCOPUS_KEYS = pd.read_csv(PATH_START_PERSONAL + '/scopuskeys.txt').iloc[:, 0].to_list()
 
 # the email to provide to unpaywall.org, please use your own : )
 UNPAYWALL_EMAIL = 'b.gunes@vu.nl'
