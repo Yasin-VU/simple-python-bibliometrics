@@ -34,6 +34,7 @@ PS: The project is only partially ready for production.
 
 
 If you have questions feel free to make an issue ticket even if it is not an issue : )
+PS: if the pip installer does not work, try conda install -c conda-forge nb_conda_kernels on an anaconda installation, and build on a python3.6
 
 
 
