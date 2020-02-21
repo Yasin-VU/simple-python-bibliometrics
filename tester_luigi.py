@@ -416,7 +416,7 @@ AddUnpaywallColumns = partial(AddX,
                          out_path_name_prefix='scopus_years_upw',
                          required_luigi_class=pickle.dumps(AddFFColumns),
                          processing_function=pickle.dumps(add_unpaywall_columns),
-                         processing_args=pickle.dumps([False])
+                         processing_args=pickle.dumps([])  # removed False
                          )
 
 #### do other decos work? add_unpaywall_columns add_altmetric_columns
