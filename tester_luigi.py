@@ -7,6 +7,9 @@
 #                 also more robust, with caches, schedulable
 
 
+# this single line will allow luigi to run longer tasks :)
+LUIGI_CONFIG_PATH = 'C:/Users/yasin/Desktop/git/simple-python-bibliometrics/example.cfg'
+
 
 # my_module.py, available in your sys.path
 import luigi
@@ -530,6 +533,7 @@ AddContactPersonColumns = partial(AddX,
 
 qq=1
 qq+=1
+
 
 
 
