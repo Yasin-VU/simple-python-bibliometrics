@@ -504,6 +504,42 @@ AddContactPersonColumns = partial(AddX,
 
 # this wraps steps 1-11 :)  !
 
+# NEXT: API-key-distributor and mega downloads
+
+class MultiScopusEndPoint(luigi.Task):
+    year_range = luigi.ListParameter()
+    qr = luigi.Parameter()
+    # AddContactPersonColumns
+
+    def output(self):
+        return luigi.LocalTarget(PATH_START_PERSONAL
+                                  + '/luigi/data/'
+                                  + 'scopus_multi'
+                                  + '_%s_%s.pkl' % (str(self.year_range), self.qr))
+
+    def requires(self):
+        return [AddContactPersonColumns(yr=year, qr=self.qr) for year in self.year_range]
+
+    def run(self):
+
+        print('multiscopus debug start')
+        # input phase
+        df_out = pd.DataFrame()
+        for cur_input in self.input():
+            res = pd.read_pickle(cur_input.path) #, index=False, encoding='utf-8')
+            print(len(res))
+            df_out = df_out.append(res)
+
+        # output phase
+        print(len(df_out))
+        print(df_out.head(1).T)
+        print(df_out.tail(1).T)
+        df_out.to_pickle(self.output().path) #, encoding='utf-8')
+
+        print('multiscopus debug end')
+
+
+
 
                          
 # the steps after 12 need to be plotted
@@ -549,7 +585,9 @@ if __name__ == '__main__':
 
     # luigi_run_result = luigi.build([AddDealColumns(yr=2020, qr=' AF-ID(60008734) AND TITLE(DATA) ')])
 
-    luigi_run_result = luigi.build([AddContactPersonColumns(yr=2020, qr=' AF-ID(60008734) AND TITLE(DATA) ')])
+    # luigi_run_result = luigi.build([AddContactPersonColumns(yr=2020, qr=' AF-ID(60008734) AND TITLE(DATA) ')])
+
+    luigi_run_result = luigi.build([MultiScopusEndPoint(year_range=[2018,2019,2020], qr=' AF-ID(60008734) AND TITLE(DATA) ')])
 
     print(luigi_run_result)
 
