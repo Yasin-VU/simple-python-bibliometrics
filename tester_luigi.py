@@ -597,9 +597,30 @@ if __name__ == '__main__':
 
     # luigi_run_result = luigi.build([AddContactPersonColumns(yr=2020, qr=' AF-ID(60008734) AND TITLE(DATA) ')])
 
-    luigi_run_result = luigi.build([MultiScopusEndPoint(year_range=[2018,2019,2020], qr=' AF-ID(60008734) AND TITLE(DATA) ')])
+    # luigi_run_result = luigi.build([MultiScopusEndPoint(year_range=[2018, 2019, 2020], qr=' AF-ID(60008734) AND TITLE(DATA) ')])
 
+    # now the real deal!
+    # we have 10 scopus keys, with 10k per key per week.
+    # every year has at most 7k, so we can do atleast 15 years prolly more
+    # but with luigi we can always rerun later for a larger set (!)
+    # so let's just do 10 years then.
+    # PS: it will be slow, because abstract is not multithreaded (didn't validate sufficiently for this scope)
+    # so it will take 24h for abstract I think, the rest should be faster so maybe 2 full days?
+    start = time.time()
+    print(start)
+    print(VU_with_VUMC_affid)
+    luigi_run_result = luigi.build(
+        [MultiScopusEndPoint(year_range=[2018, 2019, 2020], qr=' AF-ID(60008734) AND TITLE(DATA) ')]
+        #[MultiScopusEndPoint(year_range=[2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020],
+        # qr=' ' + VU_with_VUMC_affid + ' ')]
+        )
     print(luigi_run_result)
+    end = time.time()
+    print(end)
+    print(end-start)
+    print('done')
+    #
+    # no idea if api key swapper will work, but we will see : )
 
 
 
