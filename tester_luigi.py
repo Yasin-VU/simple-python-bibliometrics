@@ -502,6 +502,16 @@ AddContactPersonColumns = partial(AddX,
                                   processing_args=pickle.dumps([])
                                   )
 
+
+AddAltmetricColumns = partial(AddX,
+                              out_path_name_prefix='scopus_years_altm',
+                              required_luigi_class=pickle.dumps(AddContactPersonColumns),
+                              processing_function=pickle.dumps(add_altmetric_columns),
+                              processing_args=pickle.dumps([])
+                              )
+
+
+
 # this wraps steps 1-11 :)  !
 
 # NEXT: API-key-distributor and mega downloads
