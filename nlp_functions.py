@@ -19,6 +19,11 @@ nltk.download('punkt', quiet=True)  # check for punkt silently
 
 class SoftTitleMatcher:
     """
+
+    DEPRECATED and no longer supported: do not use.
+
+
+
     I want all processing here and a non-multipool nonfork variant in here
     
     example code:
