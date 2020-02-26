@@ -53,11 +53,28 @@ def overloaded_abstract_retrieval(identifier, view='FULL', refresh=True, id_type
     """
     try:
         res = AbstractRetrieval(identifier=identifier, view=view, refresh=refresh, id_type=id_type)
+        time.sleep(0.05)
     except Scopus429Error:
         # Use the last item of _keys, drop it and assign it as
         # current API key
-        config["Authentication"]["APIKey"] = static.SCOPUS_KEYS.pop()
-        res = AbstractRetrieval(identifier=identifier, view=view, refresh=refresh, id_type=id_type)
+        # update: keep swapping until it works
+
+        still_error = True
+        while still_error:
+            if len(static.SCOPUS_KEYS) > 0:
+                config["Authentication"]["APIKey"] = static.SCOPUS_KEYS.pop()
+                try:
+                    time.sleep(1)  # only when key has changed so 1s is fine
+                    res = AbstractRetrieval(identifier=identifier, view=view, refresh=refresh, id_type=id_type)
+                    still_error = False
+                except:
+                    print('error, key pop will happen at top of while top')
+            else:
+                still_error = False
+                input('program stopped because keys are out, press any-key to wait 7 days and continue')
+                time.sleep(60*60*24*7+1000)
+                res = AbstractRetrieval(identifier=identifier, view=view, refresh=refresh, id_type=id_type)
+
     return res
 
 
