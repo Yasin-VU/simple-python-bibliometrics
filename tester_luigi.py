@@ -5,11 +5,11 @@
 #                 so getting data may require multiple function calls
 # Target status:  just indicate which dataset you need and luigi does the rest
 #                 also more robust, with caches, schedulable
-
+#
+# update: scopus arm now runs, but settings disallow > 20k records, so will re-test with new settings now in .cfg ...
 
 # this single line will allow luigi to run longer tasks :)
 LUIGI_CONFIG_PATH = 'C:/Users/yasin/Desktop/git/simple-python-bibliometrics/example.cfg'
-
 
 # my_module.py, available in your sys.path
 import luigi
@@ -40,189 +40,11 @@ from nlp_functions import faculty_finder
 from nlp_functions import corresponding_author_functions
 import pickle
 from functools import partial
-
-class MyTask(luigi.Task):
-    x = luigi.IntParameter()
-    y = luigi.IntParameter(default=45)
-
-    def run(self):
-        print(self.x + self.y)
-
-
-class MyTask1(luigi.Task):
-    x = luigi.IntParameter()
-    y = luigi.IntParameter(default=0) 
-
-    def run(self):
-        print(self.x + self.y)
-
-
-class MyTask2(luigi.Task):
-    x = luigi.IntParameter()
-    y = luigi.IntParameter(default=1)
-    z = luigi.IntParameter(default=2)
-
-    def run(self):
-        print(self.x * self.y * self.z)
-
-if False:
-    if __name__ == '__main__':
-        luigi_run_result = luigi.build([MyTask1(x=10), MyTask2(x=15, z=3)])
-        print(luigi_run_result)
-
-
-
-class Streams(luigi.Task):
-    """
-    Faked version right now, just generates bogus data.
-    """
-    date = luigi.DateParameter()
-    qq = 1
-    qq = qq + 1
-
-    def run(self):
-        """
-        Generates bogus data and writes 
-        it into the :py:meth:`~.Streams.output` target.
-        """
-        with self.output().open('w') as output:
-            for _ in range(1000):
-                output.write('{} {} {}\n'.format(
-                    random.randint(0, 999),
-                    random.randint(0, 999),
-                    random.randint(0, 999)))
-
-    def output(self):
-        """
-        Returns the target output for this task.
-        In this case, a successful execution of this task will create a file 
-        in the local file system.
-        :return: the target output for this task.
-        :rtype: object (:py:class:`luigi.target.Target`)
-        """
-
-        return luigi.LocalTarget(PATH_START_PERSONAL + 
-                                 '/luigi/data/streams_faked_%s.tsv' 
-                                 % self.date)  # no date...
-
-
-class Streams_scopus(luigi.Task):
-    """
-    Generates bogus data.
-    """
-    #date = luigi.DateParameter()
-    yr = luigi.IntParameter()
-    mn = luigi.IntParameter()
-
-    def run(self):
-        """
-        Generates data and writes it into the 
-        :py:meth:`~.Streams.output` target.
-        """
-
-        mini_test = True
-
-        print('naming swapped?')
-        cur_mon = self.yr
-        cur_year = self.mn
-
-        scopus_date_string = get_today_for_pubdatetxt_integers(cur_year, 
-                                                               cur_mon)
-
-        VU_with_VUMC_affid = "(   AF-ID(60001997) OR    AF-ID(60008734) OR AF-ID(60029124) OR AF-ID(60012443) OR AF-ID(60109852) OR AF-ID(60026698) OR AF-ID(60013779) OR AF-ID(60032886) OR AF-ID(60000614) OR AF-ID(60030550) OR AF-ID(60013243) OR AF-ID(60026220))"
-        my_query = (VU_with_VUMC_affid 
-                    + ' AND ' 
-                    + "PUBDATETXT( " 
-                    + scopus_date_string + " )")  
-        # RECENT(1) is somehow very slow
-        if mini_test:
-            my_query = "TITLE(DATA) AND " + my_query
-
-
-        res = pd.DataFrame(ScopusSearch(my_query, refresh=True).results)
-
-        # luigi pandas?
-
-        if False:
-            with self.output().open('w') as output:
-                for _ in range(1000):
-                    output.write('{} {} {}\n'.format(
-                        random.randint(0, 999),
-                        random.randint(0, 999),
-                        random.randint(0, 999)))
-        else:
-            res.to_csv(self.output().path, index=False, encoding='utf-8')
-
-    def output(self):
-        """
-        Returns the target output for this task.
-        In this case, a successful execution of this task will create a file in the local file system.
-        :return: the target output for this task.
-        :rtype: object (:py:class:`luigi.target.Target`)
-        """
-
-        return luigi.LocalTarget(PATH_START_PERSONAL + '/luigi/data/streams_faked_%s_%d.tsv' % (self.yr, self.mn))
-
-
-
-class RefreshUnpaywall(luigi.Task):
-    #date_interval = luigi.DateIntervalParameter()
-    year_range = luigi.ListParameter()
-
-    def output(self):
-        return luigi.LocalTarget(PATH_START_PERSONAL + '/luigi/data/streams_faked_2.tsv') # % self.date_interval
-
-    def requires(self):
-        zip_list = [list(zip(np.arange(0, 12) + 1, [yr] * 12)) for yr in self.year_range]  # in self.year_range]
-        flat_list = [item for sublist in zip_list for item in sublist]
-        return [Streams_scopus(yr = year, mn = month) for year, month in flat_list]  # require multiple runs of Streams
-
-    def run(self):
-
-        artist_count = defaultdict(int)
-
-        # input phase
-        for input in self.input():
-            res = pd.read_csv(input.path) #, index=False, encoding='utf-8')
-            for cur_author_count in res.author_count.to_list():
-                artist_count[cur_author_count] += 1
-
-            #with input.open('r') as in_file:
-            #    for line in in_file:
-            #        _, artist, track = line.strip().split()
-            #        artist_count[artist] += 1
-
-
-
-        # output phase
-        with self.output().open('w') as out_file:
-            for artist, count in enumerate(artist_count):
-                # print(out_file, artist, count)
-                out_file.write(str(artist) + ' ' + str(count) + ' \n ')
-
-
-if False:
-    year_range = [2017, 2018]
-    if __name__ == '__main__':
-        luigi_run_result = luigi.build([ ####no need for this thanks to pipeline####Streams(date=datetime.date.today()),
-                                        RefreshUnpaywall( year_range=year_range)])  # date=datetime.date.today(),
-        print(luigi_run_result)
-
-
-
-# let's do the entire oadash pipeline
-# but first we need to bring all aspects to production...
-# + careful with scopus-search completeness, splitting it up may cause loss of data
-
-
-# a = input('press any key')
-print('continuing')
-# oadash-ETL buildup
+import time  # imports at the top
 
 # settings
 #
 # most-outer-loop-settings: variable
-year_range_outer = [2000, 2001, 2002]
 path_out = PATH_START_PERSONAL + '/oa new csv/'  # no r
 chosen_affid = ["60008734","60029124","60012443","60109852","60026698","60013779","60032886","60000614",
                 "60030550","60013243","60026220","60001997"]  # I added 60001997 and thus I added VUMC
@@ -245,6 +67,11 @@ all_vsnu_sdg_afids = pd.read_csv(path_vsnu_afids).iloc[:,1].astype('str').to_lis
 
 
 # now step by step push into an ETL-form in order to be able to easily skip steps during testing
+
+
+def my_hash(cur_string):
+    # deterministic and poor hash but at least reproducible
+    return str(len(cur_string)) + cur_string[0:3] + cur_string[-3:]
 
 
 class ScopusPerYear(luigi.Task):
@@ -280,7 +107,7 @@ class ScopusPerYear(luigi.Task):
         # 1X: drop all empty eids to prevent issues later (to be safe)
         df = df.dropna(axis=0, subset=['eid'], inplace=False)
 
-        print(len(df))
+        #print(len(df))
         df.to_pickle(self.output().path) #, encoding='utf-8')
 
     def output(self):
@@ -291,7 +118,7 @@ class ScopusPerYear(luigi.Task):
         :rtype: object (:py:class:`luigi.target.Target`)
         """
 
-        return luigi.LocalTarget(PATH_START_PERSONAL + '/luigi/data/scopus_years_%s_%s.pkl' % (self.yr, hash(self.qr)))
+        return luigi.LocalTarget(PATH_START_PERSONAL + '/luigi/data/scopus_years_%s_%s.pkl' % (self.yr, my_hash(self.qr)))
 
 
 class AddYearAndMonth(luigi.Task):
@@ -302,7 +129,7 @@ class AddYearAndMonth(luigi.Task):
     qr = luigi.Parameter()
 
     def output(self):
-        return luigi.LocalTarget(PATH_START_PERSONAL + '/luigi/data/scopus_years_dated_%s_%s.pkl' % (self.yr, hash(self.qr)))
+        return luigi.LocalTarget(PATH_START_PERSONAL + '/luigi/data/scopus_years_dated_%s_%s.pkl' % (self.yr, my_hash(self.qr)))
 
     def requires(self):
         return ScopusPerYear(yr=self.yr, qr=self.qr)
@@ -329,13 +156,13 @@ class AddX(luigi.Task):
     out_path_name_prefix = luigi.Parameter()
     required_luigi_class = luigi.Parameter()
     processing_function = luigi.Parameter()
-    processing_args = luigi.Parameter()  # hash
+    processing_args = luigi.Parameter()  # my_hash
 
     def output(self):
         return luigi.LocalTarget(PATH_START_PERSONAL
                                   + '/luigi/data/'
                                   + self.out_path_name_prefix
-                                  + '_%s_%s.pkl' % (self.yr, hash(self.qr)))
+                                  + '_%s_%s.pkl' % (self.yr, my_hash(self.qr)))
 
     def requires(self):
         req_fn = pickle.loads(self.required_luigi_class)
@@ -345,9 +172,6 @@ class AddX(luigi.Task):
 
         # input phase
         df_out = pd.read_pickle(self.input().path) #, index=False, encoding='utf-8')
-
-
-        # you are here: code seems to be working but we need a check cause I got 5/5 author errors... yuples were fixed
 
         # processing phase
         #
@@ -369,10 +193,8 @@ class AddX(luigi.Task):
             df_out = proc_fn(df_out)
 
         # debug
-        print(df_out.head(1).T)
-        print(df_out.iloc[:, -1])
-
-        ###print(df_out[['first_affil_author', 'first_affil_author_has_error', 'first_affil_author_org']])
+        #print(df_out.head(1).T)
+        #print(df_out.iloc[:, -1])
 
         # output phase
         df_out.to_pickle(self.output().path) #, encoding='utf-8')
@@ -512,9 +334,6 @@ AddAltmetricColumns = partial(AddX,
 
 
 
-# this wraps steps 1-11 :)  !
-
-# NEXT: API-key-distributor and mega downloads
 
 class MultiScopusEndPoint(luigi.Task):
     year_range = luigi.ListParameter()
@@ -525,33 +344,26 @@ class MultiScopusEndPoint(luigi.Task):
         return luigi.LocalTarget(PATH_START_PERSONAL
                                   + '/luigi/data/'
                                   + 'scopus_multi'
-                                  + '_%s_%s.pkl' % (str(self.year_range), hash(self.qr)))
+                                  + '_%s_%s.pkl' % (str(self.year_range), my_hash(self.qr)))
 
     def requires(self):
         return [AddAltmetricColumns(yr=year, qr=self.qr) for year in self.year_range]
 
     def run(self):
 
-        print('multiscopus debug start')
+
         # input phase
         df_out = pd.DataFrame()
         for cur_input in self.input():
             res = pd.read_pickle(cur_input.path) #, index=False, encoding='utf-8')
-            print(len(res))
             df_out = df_out.append(res)
 
         # output phase
-        print(len(df_out))
-        print(df_out.head(1).T)
-        print(df_out.tail(1).T)
         df_out.to_pickle(self.output().path) #, encoding='utf-8')
 
-        print('multiscopus debug end')
 
 
 
-
-                         
 # the steps after 12 need to be plotted
 # so what does happen next?:
 #
@@ -567,158 +379,48 @@ class MultiScopusEndPoint(luigi.Task):
 # there is also the topic_analysis route, that one is clean and perhaps shareable?
 #
 # B. ?
+#
+#
+#
+# The major issue here is that the old single-function-does-all mentality will not work here
+# We actually want to have well-defined well-split pipe parts! A single pipe piece is not a pipeline
+# and would miss out on features like intermediate checkpointing and parallel runs per year
+# and also indirectly saving results per year for re-use and interval-sharing across projects
+#
+# update: we cannot continue until we finish the refactoring test of tester_soft_title_matcher.py (!)
+# I checked the refactored code and there are bugs... they are inside the STM class during write operations
+# but I suspect there are empty columns as well
+# this is going to take some time, because not only do we need to push it in luigi-format, but also we need to refactor
+# first s.t. the code is maintainable and less hard to split into pipes
+# maybe I will make a fresh refactor with a focus on luigi-compatibility... (remember to use "nonfork version of nlp4")
+#
+# update2: there is much more refactoring work than I thought: there are zero top-level functions still
 
 
 
 # PS: the database functions need to be generalized s.t. ppl can plug own server
 #     or use flat-files instead [preferred]
-  
-
-
-######################################
-
-qq=1
-qq+=1
-
-
-
 
 year_range = [2017, 2018]
 if __name__ == '__main__':
-    #luigi_run_result = luigi.build([ScopusPerYear(yr=2020, qr='TITLE(TENSOR data)')])  # date=datetime.date.today(),
 
-    #luigi_run_result = luigi.build([AddAbstractColumns(yr=2020, qr='TITLE(TENSOR data)')])
-
-    #luigi_run_result = luigi.build([AddAuthorInfoColumns(yr=2020, qr=' AF-ID(60008734) AND TITLE(DATA) ')])
-
-    #luigi_run_result = luigi.build([AddUnpaywallColumns(yr=2020, qr=' AF-ID(60008734) AND TITLE(DATA) ')])
-
-    # luigi_run_result = luigi.build([AddDealColumns(yr=2020, qr=' AF-ID(60008734) AND TITLE(DATA) ')])
-
-    # luigi_run_result = luigi.build([AddContactPersonColumns(yr=2020, qr=' AF-ID(60008734) AND TITLE(DATA) ')])
-
-    # luigi_run_result = luigi.build([MultiScopusEndPoint(year_range=[2018, 2019, 2020], qr=' AF-ID(60008734) AND TITLE(DATA) ')])
-
-    # now the real deal!
-    # we have 10 scopus keys, with 10k per key per week.
-    # every year has at most 7k, so we can do atleast 15 years prolly more
-    # but with luigi we can always rerun later for a larger set (!)
-    # so let's just do 10 years then.
-    # PS: it will be slow, because abstract is not multithreaded (didn't validate sufficiently for this scope)
-    # so it will take 24h for abstract I think, the rest should be faster so maybe 2 full days?
-    import time
     start = time.time()
     print(start)
     print(VU_with_VUMC_affid)
-    luigi_run_result = luigi.build(
-        [MultiScopusEndPoint(year_range=[2018, 2019, 2020], qr=' AF-ID(60008734) AND TITLE(DATA) ')]
-        #[MultiScopusEndPoint(year_range=[2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020],
-        # qr=' ' + VU_with_VUMC_affid + ' ')]
-        )
+    mini_test = True
+    if mini_test:
+        task_at_hand = [MultiScopusEndPoint(year_range=[2018, 2019, 2020], qr=' AF-ID(60008734) AND TITLE(DATA) ')]
+    else:
+        task_at_hand = [MultiScopusEndPoint(year_range=[2009, 2010, 2011, 2012, 2013,
+                                                        2014, 2015, 2016, 2017, 2018,
+                                                        2019, 2020],
+                                            qr=' ' + VU_with_VUMC_affid + ' ')]
+
+    luigi_run_result = luigi.build(task_at_hand)
     print(luigi_run_result)
     end = time.time()
-    print(end)
     print(end-start)
     print('done')
     #
     # no idea if api key swapper will work, but we will see : )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-a = input('press any key to run the regular pipeline')
-
-### below is the starting point pipeline
-
-# major tasks:
-# 1x. perform scopus search
-s = ScopusSearch(my_query, refresh=True)  #(VU_aff + " AND " + recent, refresh=True)
-df = pd.DataFrame(s.results)
-fav_fields = ['eid',  'creator',  'doi',  'title',  'afid',
- 'affilname',  'author_count',  'author_names',  'author_afids',
- 'coverDate',  'coverDisplayDate',  'publicationName', 'issn',  'source_id', 'eIssn',
- 'citedby_count', 'fund_sponsor', 'aggregationType', 'openaccess']
-df = df[fav_fields]  # cut fields
-#
-# 1X: drop all empty eids to prevent issues later (to be safe)
-df = df.dropna(axis=0, subset=['eid'], inplace=False)
-
-# 2. add year and month
-df = add_year_and_month(df, 'coverDate')  # add info columns
-
-# below we split up 3 routines which are wrongfully combined (refactor required)
-
-# 3. add abs
-df = add_abstract_columns(df)
-
-# 4. add au
-df = add_author_info_columns(df, chosen_affid)
-
-# 5. add ff
-#
-# 5A. prepare the faculty_finder NLP tool
-org_info = pd.read_excel(path_org, skiprows=0)
-ff = faculty_finder(organizational_chart=org_info)
-#
-# 5B. add ff
-df = add_faculty_info_columns(df, ff)
-
-# 6. add unpaywall
-df = add_unpaywall_columns(df, silent=False)
-
-# 7. add deal info
-df = add_deal_info(path_deals=path_deals, path_isn=path_isn, df_b=df)
-
-# 8. add corresponding author info
-df = (corresponding_author_functions()
-      .add_corresponding_author_info(df=df,
-                                     vu_afids=vu_afids,
-                                     ukb_afids=all_vsnu_sdg_afids))
-
-# 9. post-process unpaywall
-# these are NEW column names so you can use an add_ function
-df['upw_oa_color_category'] = df.upw_oa_color.apply(fn_cats)
-df['upw_oa_color_verbose'] = df['upw_oa_color'].apply(lambda x: 'unknown' if x is np.nan else x)
-
-# 10. renames
-df = renames(df)
-
-# 11. get contact person
-df['vu_contact_person'] = df.apply(get_contact_point, axis=1)
-
-# 12. after this point, there is a lot going on with PURE processing, P+S merging, keuzemodel, STM(tester_STM!!),
-#     and more stuff (partially in production, partially not yet)
-#     this will require a lot of searching and refactoring
-#     we must first move the stuff above to luigi s.t. we can skip those edits/downloads while testing : )
-
-df.head()
-
-# check op punten -> kommas voor PBI issues !
-
-
-
-
-
-
-
-
-
-
-
 
