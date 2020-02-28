@@ -67,13 +67,15 @@ def overloaded_abstract_retrieval(identifier, view='FULL', refresh=True, id_type
                     time.sleep(1)  # only when key has changed so 1s is fine
                     res = AbstractRetrieval(identifier=identifier, view=view, refresh=refresh, id_type=id_type)
                     still_error = False
-                except:
+                except Scopus429Error:  # NO! only for 429
                     print('error, key pop will happen at top of while top')
+                except:
+                    print('non429 error')
+                    still_error = False
+                    res = None  # ?
             else:
                 still_error = False
-                input('program stopped because keys are out, press any-key to wait 7 days and continue')
-                time.sleep(60*60*24*7+1000)
-                res = AbstractRetrieval(identifier=identifier, view=view, refresh=refresh, id_type=id_type)
+                res = None  # ?
 
     return res
 
@@ -792,6 +794,7 @@ def crystal_scopus_abstract(cur_id, my_requests):
                         time.sleep(1)
                         if retries > 2:
                             print('retrying ' + str(retries))
+                            ### some returns are caught here as well sadly...
                     else:
                         retry = False
                         # prepare for exit
@@ -809,6 +812,130 @@ def crystal_scopus_abstract(cur_id, my_requests):
 
     return r, relevant_keys, cur_id_lower, prepend, id_type
 crystal_scopus_abstract = appender(func=crystal_scopus_abstract, cur_id_name='eid')
+
+
+
+###@appender(cur_id_name='eid')
+@faster
+@check_errors_and_parse_outputs
+@check_id_validity
+def crystal_scopus_abstract2(cur_id, my_requests):
+    """
+    This is a bit annoying because this returns either None or a dictionary, and not a request object...
+    So I will just send requests without the package
+
+    2 only gives abstract_text
+    """
+
+    prepend = 'scopus_abstract_'
+    id_type = 'eid'
+    cur_id_lower = cur_id.lower()  # irrelevant but OK
+
+    ### not used
+    ###if my_requests is None:
+    ####    my_requests = requests  # avoids passing requests around everytime
+
+    # some settings
+    # None
+
+    # the issue is that ab is not a requests-type
+    # but we need requests-type
+    # also, I do not want to use homebrew request code for it because scopus apis are an outsourced mess
+    # instead we will use a mock
+
+    relevant_keys = ['text', 'retries']  # all in one, care integration
+    # , 'doi', 'doi_lowercase'  : you get these from callers
+    if cur_id == 'invalid':
+        # get the invalid-doi-response directly from disk to save time, you can run update_api_statics to update it
+        in_file = open(static.PATH_STATIC_RESPONSES_SCOPUS_ABS, 'rb')
+        r = pickle.load(in_file)
+        in_file.close()
+    else:
+        # r = my_requests.get("https://api.unpaywall.org/" + str(cur_id) + "?email=" + UNPAYWALL_EMAIL)  # force string
+        # r = my_requests.get(url, params={}, headers={})
+        #
+        # scopus api is not friendly so I need a try/except here
+        #
+
+
+        # wait-and-retry
+        one_shot = False
+        if one_shot:
+            retries = 0
+            try:
+                ab = overloaded_abstract_retrieval(identifier=cur_id, view='FULL', refresh=True, id_type='eid')
+                r = Mock(spec=Response)
+                try:
+                    ab_abstract = ab.abstract
+                except:
+                    # error in getting abstract out (outside API
+                    ab_abstract = np.nan
+                r.json.return_value = {'text': ab_abstract, 'message': 'hi', 'retries':retries}
+                r.status_code = 999
+                # requirements:
+                # r.json().keys
+                # r.json()['message']
+                # r.json()['results']  # if not present, will not unpack and use json().keys()
+            except:
+                # if so, fall back to invalid routine
+                #
+                # get the invalid-doi-response directly from disk to save time, you can run update_api_statics to update it
+                in_file = open(static.PATH_STATIC_RESPONSES_SCOPUS_ABS, 'rb')
+                r = pickle.load(in_file)
+                in_file.close()
+        else:
+            # print(one_shot)
+            retry = True
+            retries = -1
+            while retry:
+                #retry = False  # removes retries
+                retries = retries + 1
+                try:
+                    ab = overloaded_abstract_retrieval(identifier=cur_id, view='FULL', refresh=True, id_type='eid')
+                    qq = ab.title
+                    qqx = qq + 'x'
+                    #
+                    # if api does not error, and wepuyc have an title, then the call is correct and we got info back successfully
+                    #
+                    # then do rest of actions
+                    r = Mock(spec=Response)
+                    try:
+                        ab_abstract = ab.abstract
+                    except:
+                        # error in getting abstract out (outside API
+                        ab_abstract = np.nan
+                    r.json.return_value = {'text': ab_abstract, 'message': 'hi', 'retries': retries}
+                    r.status_code = 999
+                    retry = False
+                except:
+                    # we had an api error or a return with empty information
+                    # either way, just fillna and continue
+                    if retries < 30:
+                        retry = True
+                        time.sleep(1)
+                        if retries > 2:
+                            print('retrying ' + str(retries))
+                    else:
+                        retry = False
+                        # prepare for exit
+                        in_file = open(static.PATH_STATIC_RESPONSES_SCOPUS_ABS, 'rb')
+                        r = pickle.load(in_file)
+                        in_file.close()
+
+
+        # you have to validate this code because scopus has weird features going in which mess up data when overloading
+
+    return r, relevant_keys, cur_id_lower, prepend, id_type
+crystal_scopus_abstract2 = appender(func=crystal_scopus_abstract2, cur_id_name='eid')
+
+
+
+
+
+
+
+
+
 
 
 class api_extractor:

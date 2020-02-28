@@ -28,5 +28,5 @@ PATH_STATIC_RESPONSES_ALTMETRIC = PATH_START + 'raw data algemeen/api_caches/upw
 PATH_STATIC_RESPONSES_SCOPUS_ABS = PATH_START + 'raw data algemeen/api_caches/upw_invalid_request_object_scopus_abs.pkl'
 
 # DEFAULT maximum number of workers for multi-threading
-MAX_NUM_WORKERS = 16  # if you experience any issues, please first reduce this to 16 or 8 and retry
+MAX_NUM_WORKERS = 8  # if you experience any issues, please first reduce this to 16 or 8 and retry
 
