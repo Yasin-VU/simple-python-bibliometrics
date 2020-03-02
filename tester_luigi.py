@@ -101,7 +101,7 @@ class ScopusPerYear(luigi.Task):
         fav_fields = ['eid',  'creator',  'doi',  'title',  'afid',
          'affilname',  'author_count',  'author_names',  'author_afids',
          'coverDate',  'coverDisplayDate',  'publicationName', 'issn',  'source_id', 'eIssn',
-         'citedby_count', 'fund_sponsor', 'aggregationType', 'openaccess']
+         'citedby_count', 'fund_sponsor', 'aggregationType', 'openaccess', 'description', 'authkeywords']
         df = df[fav_fields]  # cut fields
         #
         # 1X: drop all empty eids to prevent issues later (to be safe)
@@ -362,6 +362,31 @@ class MultiScopusEndPoint(luigi.Task):
         df_out.to_pickle(self.output().path) #, encoding='utf-8')
 
 
+class MultiScopusEndPoint_csv(luigi.Task):
+    year_range = luigi.ListParameter()
+    qr = luigi.Parameter()
+    # AddContactPersonColumns
+
+    def output(self):
+        return luigi.LocalTarget(PATH_START_PERSONAL
+                                  + '/luigi/data/'
+                                  + 'scopus_multi_csv'
+                                  + '_%s_%s.csv' % (str(self.year_range), my_hash(self.qr)))
+
+    def requires(self):
+        return MultiScopusEndPoint(year_range=self.year_range, qr=self.qr)
+
+    def run(self):
+
+        # input phase
+        df_out = pd.read_pickle(self.input().path) #, index=False, encoding='utf-8')
+        #df_out = df_out.drop(columns=['abstract_object'])  # most basic way but OK
+
+        # output phase
+        df_out.to_csv(self.output().path) #, encoding='utf-8')
+
+
+# now to db (!)
 
 
 # the steps after 12 need to be plotted
@@ -395,22 +420,22 @@ class MultiScopusEndPoint(luigi.Task):
 # maybe I will make a fresh refactor with a focus on luigi-compatibility... (remember to use "nonfork version of nlp4")
 #
 # update2: there is much more refactoring work than I thought: there are zero top-level functions still
-
-
+#          maybe we should first wrap the previous refactor and refactor that, I blocked a few moments for this
 
 # PS: the database functions need to be generalized s.t. ppl can plug own server
 #     or use flat-files instead [preferred]
 
-year_range = [2017, 2018]
-if __name__ == '__main__':
 
+if __name__ == '__main__':
+    print('starting')
     start = time.time()
     print(start)
     print(VU_with_VUMC_affid)
     mini_test = True
     if mini_test:
-        task_at_hand = [MultiScopusEndPoint(year_range=[2018, 2019, 2020], qr=' AF-ID(60008734) AND TITLE(DATA) ')]
+        task_at_hand = [MultiScopusEndPoint_csv(year_range=[2018, 2019, 2020], qr=' AF-ID(60008734) AND TITLE(DATA) ')]
     else:
+        # needs a rerun(!), but won't overwrite the other hash (almost always)
         task_at_hand = [MultiScopusEndPoint(year_range=[2009, 2010, 2011, 2012, 2013,
                                                         2014, 2015, 2016, 2017, 2018,
                                                         2019, 2020],
@@ -421,6 +446,7 @@ if __name__ == '__main__':
     end = time.time()
     print(end-start)
     print('done')
-    #
-    # no idea if api key swapper will work, but we will see : )
+
+
+
 
