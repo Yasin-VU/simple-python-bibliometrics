@@ -1240,7 +1240,7 @@ def multiprocessing(func, args,
 
 def my_timestamp():
     # return a sring with current time info
-    now = datetime.datetime.now()
+    now = datetime.now()
     return '_'.join(['', str(now.year), str(now.month), str(now.day), str(now.hour), str(now.minute), str(now.second)])
 
 
