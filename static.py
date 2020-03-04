@@ -11,8 +11,8 @@ USE_MULTI_THREAD_DEFAULT = True  # does nothing for now
 PATH_START =  'G:/UBVU/Data_RI/' #'/media/sf_Data_RI/'  #
 PATH_START_PERSONAL = 'C:/Users/yasin/Desktop/git'
 #
+PATH_START_SERVER = 'C:/Users/yasing/Desktop/oa oktober/'
 PATH_START_PERSONAL_SERVER = 'C:/Users/yasing/Desktop/git'
-PATH_START_SERVER = 'C:/Users/yasing/Desktop/oa oktober'
 
 
 PRODUCTION_MODE = False  # does nothing yet
