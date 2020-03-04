@@ -431,14 +431,13 @@ if __name__ == '__main__':
     start = time.time()
     print(start)
     print(VU_with_VUMC_affid)
-    mini_test = True
+    mini_test = False
     if mini_test:
         task_at_hand = [MultiScopusEndPoint_csv(year_range=[2018, 2019, 2020], qr=' AF-ID(60008734) AND TITLE(DATA) ')]
     else:
         # needs a rerun(!), but won't overwrite the other hash (almost always)
-        task_at_hand = [MultiScopusEndPoint(year_range=[2009, 2010, 2011, 2012, 2013,
-                                                        2014, 2015, 2016, 2017, 2018,
-                                                        2019, 2020],
+        task_at_hand = [MultiScopusEndPoint(year_range=[2017, 2018,
+                                                        2019, 2020],  # 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016,
                                             qr=' ' + VU_with_VUMC_affid + ' ')]
 
     luigi_run_result = luigi.build(task_at_hand)
