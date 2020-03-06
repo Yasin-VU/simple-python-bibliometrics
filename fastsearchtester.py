@@ -12,7 +12,7 @@ df_eids = pd.read_csv(start_path + 'eids.csv')
 
 eid_list = df_eids.eid.to_list()
 
-phase_one = False
+phase_one = True
 
 if phase_one:
     ii = 0

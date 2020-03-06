@@ -15,13 +15,15 @@ import matplotlib.pyplot as plt
 #
 # end of imports
 
+core = 'oa2019map'
 
 # settings
 #
 # starting point of P+S table to improve with STM
-df_total = pd.read_csv(PATH_START + r'\raw data algemeen\pipeline_test\merged_data\df_total.csv')
+df_total = pd.read_csv(PATH_START + '/raw data algemeen/' + core + '/merged_data/df_total.csv')
+# df_total has all multi_years
 # chosen year
-chosen_year = 2018
+chosen_year = 2019
 #
 # end of settings
 
@@ -37,13 +39,21 @@ df_total_with_STM, df_total_with_STM_rich_2018 = stm.improve_merged_table_using_
                                                                                             do_save=False,
                                                                                             cond_len=4,
                                                                                             cond_score=0.6)
-df_total_with_STM_rich_2018.to_csv(PATH_START + r'raw data algemeen\code speedup test data\refactor_test.xlsx')
-tester = pd.read_csv(PATH_START + r'raw data algemeen\code speedup test data\nlp2_result_fast - refactor test.xlsx')
+df_total_with_STM_rich_2018.to_csv(PATH_START + '/raw data algemeen/' + core + '/merged_data/refactor_test.csv')
+example_data = pd.read_excel(PATH_START +
+                           r'raw data algemeen\code speedup test data\nlp2_result_fast - refactor test.xlsx')  # fixed
+print('done')
+print(PATH_START + '/raw data algemeen/' + core + '/merged_data/refactor_test.xlsx')
+qq=1
+qq=qq+1
 #
 # end of test
 #
-# there are issues with packages and some pandas warnings: tackle them please
-
+# ISSUES:
+# 1. there are issues with packages and some pandas warnings: tackle them please
+# 2. we need a multi-year approach for STM too: how to implement that?: df_unmerged_P/S have all 3 years: use that
+#    and then we need to post-filter within the Power BI or right before that and only mail the middle year...
+#
 
 
 

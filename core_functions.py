@@ -381,7 +381,7 @@ def check_errors_and_parse_outputs(func):
     # first layer is a pass right now and that is OK
     def decorator_check_errors_and_parse_outputs(func):
         @functools.wraps(func)
-        def wrapper_check_errors_and_parse_outputs(cur_id, my_requests):
+        def wrapper_check_errors_and_parse_outputs(cur_id, my_requests=requests):  # !!!!
             #
             # pre-processing
             #
@@ -1360,6 +1360,8 @@ def pre_process_pure_data(df,
     # "33.1 Keywords in 'Open Access classification'[1]"
     ]]
 
+
+
     admitted_types = ['Chapter in Book / Report / Conference proceeding - Chapter',
            'Contribution to Journal - Article',
            'Contribution to Conference - Paper',
@@ -1367,8 +1369,50 @@ def pre_process_pure_data(df,
            'Book / Report - Book',
            'Chapter in Book / Report / Conference proceeding - Conference contribution',
            'Contribution to Journal - Review article',
-    ]
+    ]  ## OVERWRITES LATER
 
+    # I will play safe for now, can always post-filter it
+    accepted_amsco_types_sample = ['Contribution to journal - Article',
+       'Chapter in Book/Report/Conference proceeding - Chapter',
+       'Chapter in Book/Report/Conference proceeding - Foreword/postscript',
+       'Book/Report - Book',
+       'Contribution to journal - Review article',
+       ###'Contribution to journal - Comment/Letter to the editor',
+       #'Thesis - Thesis: Research University of Amsterdam, graduation University of Amsterdam',
+       'Book/Report - Report',
+       #'Non-textual form - Web publication/site',
+       #'Book/Report - Book editing',
+       #'Thesis - Thesis: Research external, graduation external',
+       'Contribution to journal - Editorial',
+       'Chapter in Book/Report/Conference proceeding - Conference contribution',
+       #'Book/Report - Inaugural speech',
+       #'Working paper - Working paper',
+       'Contribution to conference - Paper',
+       'Contribution to conference - Abstract',
+       # 'Case note - Case note',
+       'Contribution to journal - Meeting Abstract',
+       'Contribution to journal - Book/Film/Article review',
+       #'Contribution to conference - Poster',
+       'Contribution to journal - Special issue',
+       ###'Contribution to journal - Erratum/Corrigendum',
+       #'Non-textual form - Exhibition',
+       'Chapter in Book/Report/Conference proceeding - Entry for encyclopedia/dictionary',
+       #'Thesis - Thesis: Research University of Amsterdam, graduation external',
+       'Contribution to journal - Letter',
+       'Contribution to journal - Short survey',
+       #'Book/Report - Valedictory speech',
+       #'Contribution to journal - Literature review (NOT USED)',
+       #'Thesis - Thesis: Research external, graduation University of Amsterdam',
+       #'Non-textual form - Digital or Visual Products'
+       ]
+    admitted_types = ['Chapter in Book / Report / Conference proceeding - Chapter',
+           'Contribution to Journal - Article',
+           'Contribution to Conference - Paper',
+           'Book / Report - Report',
+           'Book / Report - Book',
+           'Chapter in Book / Report / Conference proceeding - Conference contribution',
+           'Contribution to Journal - Review article',
+    ] + accepted_amsco_types_sample
 
 
     # pre-processing
@@ -1376,7 +1420,9 @@ def pre_process_pure_data(df,
     # some robustness needed... some asserts too
     #
     admitted_types_lower = pd.DataFrame(admitted_types)[0].str.lower().to_list()
+    print('pure unprocessed has this many rows: ' + str(len(df)))
     df = df[df['Type'].str.lower().isin(admitted_types_lower)]
+    print('pure processed has this many rows: ' + str(len(df)))
     ###df = df[df['Type'].isin(admitted_types)]
     ###df = df[df['Type'].isin(admitted_types)]
     df['DOI'] = df['Electronic version(s) of this work > DOI (Digital Object Identifier)[1]']
@@ -1569,8 +1615,10 @@ def add_abstract_to_scopus(start_path,
     """
     #
     # get scopus pkl file
+    print('started reading a pickle ')
     df_pickle = pd.read_pickle(start_path + '/scopus_processed/pickle_OA_VU' \
                                + str(year) + '_met_corresponding_authors.pkl')
+    print('finished reading a pickle ')
     # make abstract text and clean it
     df_pickle['abstract_text'] = df_pickle.apply(get_abstract_if_any, axis=1)
     df_pickle['abstract_text_clean'] = (df_pickle['abstract_text']
@@ -1613,6 +1661,17 @@ def merge_pure_with_scopus_data(df_p, df_s, df_t):
     :return: df_combined (the merged dataframe including merge_source), diagnostics (is None right now)
     """
 
+    # we need to clean the dois otherwise the doi merge will fail
+    # I am going to take a small risk and do a overwrite...
+
+    df_p_backup = df_p.copy()
+    df_s_backup = df_s.copy()
+
+    df_p['DOI'] = df_p.DOI.apply(lambda x: x.replace('https://doi.org/', '') if pd.notnull(x) else x)
+    df_s['doi'] = df_s.doi.apply(lambda x: x.replace('https://doi.org/', '') if pd.notnull(x) else x)
+
+
+
     # 1. use df_t to enrich df_p with eids, continue with df_m
     df_m = df_p.merge(df_t, left_on='pub_uuid', right_on='pub_uuid', how='left')
     df_m['has_eid'] = ~df_m.eid.isnull()
@@ -1626,7 +1685,7 @@ def merge_pure_with_scopus_data(df_p, df_s, df_t):
     # plan of attack: split part with eid, de-dupe it w/o worrying about nan eids, then re-append the part w/o eid
     df_m = df_m[df_m.eid.isnull()].append(df_m[~df_m.eid.isnull()].drop_duplicates(subset=['eid'], keep='last'))
     if df_m[~df_m.eid.isnull()].eid.value_counts().max() != 1:
-        print('eid de-duplication failed somehow')
+        print('eid de-duplication failed somehow, you can ignore this if you used AMSCO-data')
     # 2B. de-duplicate on DOI
     #     some are maked as 'do_not_merge_on_DOI' which is an advanced feature
     # assumptions:
@@ -1680,6 +1739,7 @@ def merge_pure_with_scopus_data(df_p, df_s, df_t):
             .append(df_m[~df_m['is_dupe_based_on_long_title_dupe']]))
     #
     # end of de-duplication and tagging 'do_not_merge_on_DOI' and 'do_not_merge_on_title'
+
 
 
     # 3. Perform the mega-merge
@@ -1817,7 +1877,11 @@ def merge_pure_with_scopus_data(df_p, df_s, df_t):
     # generate resulting combined table (name it SP)
     # ! careful! you cant just add stuff, we absorbed Aunmerged for example!
     # first append cols to unmerged parts
-    df_Amerged_SA.loc[:, 'merge_source'] = 'both'
+    if len(df_Amerged_SA) > 0:
+        df_Amerged_SA.loc[:, 'merge_source'] = 'both'
+    else:
+        df_Amerged_SA['merge_source'] = None 
+
     df_Bmerged_SB.loc[:, 'merge_source'] = 'both'
     df_Cmerged_SC_exact.loc[:, 'merge_source'] = 'both'
     df_Cunmerged.loc[:, 'merge_source'] = 'pure'
@@ -1835,7 +1899,7 @@ def merge_pure_with_scopus_data(df_p, df_s, df_t):
 
 
 def prepare_combined_data(start_path,
-                         year_range=(2017, 2018, 2019),
+                         year_range,
                          add_abstract=True,
                          skip_preprocessing_pure_instead_load_cache=False,  # safe
                          remove_ultra_rare_class_other=True,
@@ -1883,6 +1947,7 @@ def prepare_combined_data(start_path,
         # do not add an abstract and use the original csv
         scopus_variant = '_met_corresponding_authors.csv'
 
+    print('start 3')
     # 3. Obtain df_combined for a single year
     #    includes obtaining processed pure, scopus and xpure data, then merging it and saving csvs
     df_p_multi_year = pd.DataFrame()
@@ -1947,6 +2012,7 @@ def prepare_combined_data(start_path,
         df_combined.to_csv(start_path + '/merged_data/df_total.csv')
         df_combined.to_pickle(start_path + '/merged_data/df_total.pkl')
 
+    print('start 5')
     # 5: save the full data
     df_combined.to_csv(start_path +
         '/merged_data/df_total.csv')

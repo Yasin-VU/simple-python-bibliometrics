@@ -21,6 +21,7 @@ class SoftTitleMatcher:
     """
 
     DEPRECATED and no longer supported: do not use.
+    update: then what AM I supposed to use?
 
 
 
@@ -92,7 +93,8 @@ class SoftTitleMatcher:
 
 
         
-        
+
+        print('starting core STM routine')
         # wrapper
         list_x = list(np.arange(0, len(left)))
         df_winners = pd.DataFrame()
@@ -118,6 +120,7 @@ class SoftTitleMatcher:
             if pd.notnull(out_path):
                 df_winners.to_csv(out_path + '.csv')
 
+        print('wrapping core STM routine')
         return df_winners
 
 
@@ -209,15 +212,15 @@ class SoftTitleMatcher:
         # culprit is here: there are some accepted multi right matches...
         # let's apply our fix higher up and then redo
         df_a = (df_a
-         .sort_values(['right_post_merge_id','score'],ascending=False)
-         .drop_duplicates(subset='right_post_merge_id',keep='first'))
+                .sort_values(['right_post_merge_id', 'score'], ascending=False)
+                .drop_duplicates(subset='right_post_merge_id', keep='first'))
         
         # first define a new ID which is equal left and right
         
         #df_a.left_post_merge_id
         #df_a.right_post_merge_id
-        df_a.loc[:,'to_merge_id'] = 1
-        df_a.loc[:,'to_merge_id'] = df_a.loc[:,'to_merge_id'].cumsum()
+        df_a.loc[:, 'to_merge_id'] = 1
+        df_a.loc[:, 'to_merge_id'] = df_a.loc[:,'to_merge_id'].cumsum()
         
         # now merge this information back into df_total
         # first split merged/unmerged to avoid double merges
@@ -241,7 +244,11 @@ class SoftTitleMatcher:
         #
         # now remove the columns we do not want
         # I am not happy with the hardcode, but OK for now
-        
+
+
+        # print('debug here, the pure_cols have prolly changed with amsoc, build a case/swap here')
+        # check finished: we only have 1 extra: own_doi_lowercase and we do not care about that one
+
         pure_cols = ['Unnamed: 0',
          'Title of the contribution in original language',
          'Current publication status > Date',
