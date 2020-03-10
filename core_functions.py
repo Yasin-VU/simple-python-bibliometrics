@@ -1704,11 +1704,21 @@ def merge_pure_with_scopus_data(df_p, df_s, df_t):
                     .drop_duplicates(subset='DOI', keep='last')))
     #
     # step 2: prepare 'do_not_merge_on_DOI' tag
-    df_m['do_not_merge_on_DOI'] = ((df_m.DOI.isin(double_doi)) & (df_m.type_contains_book))
+    ###df_m['do_not_merge_on_DOI'] = ((df_m.DOI.isin(double_doi)) & (df_m.type_contains_book))
+    #
+    df_m['do_not_merge_on_DOI'] = (df_m.DOI.isin(double_doi))
+    #
     doi_counts = df_m[~df_m.DOI.isnull()].DOI.value_counts().sort_values(ascending=False)
     double_doi = doi_counts[doi_counts > 1].index.to_list()  # for future use or to mail Reinout or whatever
     if df_m[df_m.DOI.isin(double_doi)].do_not_merge_on_DOI.mean() != 1:
         print('doi de-duplication failed somehow')
+        # this sometimes happens due to doi-https-cleaning??? No
+        # this happens when there are book-types with duplicate dois: a rare happening, and it will mess up stuff
+        # why: you will get issues during merging
+        # proposed solution: if two different bookparts have the same doi, do not merge on doi at all
+        # that is the safest, as STM has a good chance of post-fixing it.
+        # but do not delete those records though, just do not merge on doi (they are different pieces after all)
+
     # 2C. de-duplicate on titles
     #
     # drop records where there are more than 1 word in the title (where title duplicate)

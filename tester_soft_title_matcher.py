@@ -32,6 +32,13 @@ chosen_year = 2019
 #
 stm = SoftTitleMatcher()
 
+# df_total: 18k
+# both      6304
+# pure      4104
+# scopus    7593
+#
+# df_total_with_STM_rich_2018.groupby('merge_source').agg('count').max(1)
+
 
 df_total_with_STM, df_total_with_STM_rich_2018 = stm.improve_merged_table_using_STM_results(df_total=df_total,
                                                                                             chosen_year=chosen_year,
@@ -39,13 +46,34 @@ df_total_with_STM, df_total_with_STM_rich_2018 = stm.improve_merged_table_using_
                                                                                             do_save=False,
                                                                                             cond_len=4,
                                                                                             cond_score=0.6)
+
+print('done')
+print(PATH_START + '/raw data algemeen/' + core + '/merged_data/refactor_test.xlsx')
+
+print('----')
+print(len(df_total))
+print(df_total.groupby('merge_source').agg('count').max(1))
+print(df_total[(df_total.scopus_year == 2019) | (df_total.pure_year == 2019)].groupby('merge_source').agg('count').max(1))
+print(df_total.groupby(['year', 'merge_source']).agg('count').max(1))
+print('----')
+print(len(df_total_with_STM_rich_2018))
+print(df_total_with_STM_rich_2018.groupby('merge_source').agg('count').max(1))
+print(df_total_with_STM_rich_2018[(df_total_with_STM_rich_2018.scopus_year == 2019)
+                                  | (df_total_with_STM_rich_2018.pure_year == 2019)]
+      .groupby('merge_source')
+      .agg('count')
+      .max(1))
+print(df_total_with_STM_rich_2018.groupby(['year', 'merge_source']).agg('count').max(1))
+print('----')
+
+
+qq=1
+qq=qq+1
+
 df_total_with_STM_rich_2018.to_csv(PATH_START + '/raw data algemeen/' + core + '/merged_data/refactor_test.csv')
 example_data = pd.read_excel(PATH_START +
                            r'raw data algemeen\code speedup test data\nlp2_result_fast - refactor test.xlsx')  # fixed
-print('done')
-print(PATH_START + '/raw data algemeen/' + core + '/merged_data/refactor_test.xlsx')
-qq=1
-qq=qq+1
+
 #
 # end of test
 #

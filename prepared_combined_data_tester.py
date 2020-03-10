@@ -22,7 +22,7 @@ prepare_combined_data(start_path=PATH_START + '/raw data algemeen/oa2019map',
                       path_pw=PATH_START_PERSONAL,
                       org_info=pd.read_excel(PATH_START + '/raw data algemeen/vu_organogram_2.xlsx', skiprows=0))
 
-
+print('done')
 # worked once
 # now trying to make it work again for the current situation
 # some filenames have changed

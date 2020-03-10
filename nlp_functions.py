@@ -220,7 +220,7 @@ class SoftTitleMatcher:
         #df_a.left_post_merge_id
         #df_a.right_post_merge_id
         df_a.loc[:, 'to_merge_id'] = 1
-        df_a.loc[:, 'to_merge_id'] = df_a.loc[:,'to_merge_id'].cumsum()
+        df_a.loc[:, 'to_merge_id'] = df_a.loc[:, 'to_merge_id'].cumsum()
         
         # now merge this information back into df_total
         # first split merged/unmerged to avoid double merges
