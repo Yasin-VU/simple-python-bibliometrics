@@ -25,14 +25,14 @@ import pickle
 import time
 
 
-def column_fuser_and_fac_unknown_fixer():
+def column_fuser_and_fac_unknown_fixer(df = pd.read_csv(r'G:\UBVU\Data_RI\raw data algemeen\oa2019map' + r'\merged_data\refactor_test.csv'),
+                                       start_path = r'G:\UBVU\Data_RI\raw data algemeen\oa2019map',
+                                       do_save = True,
+                                       chosen_year=2019):
 
     # settings
     #
-    do_save = True
     #
-    start_path = r'G:\UBVU\Data_RI\raw data algemeen\oa2019map'
-    df = pd.read_csv(start_path + r'\merged_data\refactor_test.csv')
     #
     # post-fix settings
     chosen_affid = ["60008734","60029124","60012443","60109852","60026698","60013779","60032886","60000614",
@@ -47,7 +47,9 @@ def column_fuser_and_fac_unknown_fixer():
     filename = 'C:/Users/yasin/Desktop/ML X Y 2/' + 'production_model_1' + '.pkl'
     filename_tfidf = 'C:/Users/yasin/Desktop/ML X Y 2/tfidf_' + 'production_model_1' + '.pkl'
     #
-    final_output_name = 'RETRY_NEW_df_total_with_STM_2019_with_keuzemodel_faculty_filled.csv'
+    final_output_name = 'open_access_dashboard_data_v3_' + str(chosen_year) + '.csv' 
+    #
+    #
 
 
 
@@ -316,6 +318,7 @@ def column_fuser_and_fac_unknown_fixer():
     #
 
 
-
+    
     print('done with column fuser and unknown faculty fixer')
+    return df_distil_rich_no_fac_unknown
 

@@ -388,6 +388,7 @@ class SoftTitleMatcher:
         # now isolate 2018 on a rich rule and save that as well
         # because we now the data is only proper for the middle years
         
+        ### !!! 2018 in var-name: check its entire lifecycle !!!
         # ! this is hardcode must be variabilized with year_range[1:-1]
         df_total_with_STM_rich_2018 = df_total_with_STM[(df_total_with_STM.scopus_year == chosen_year) |
                                                         (df_total_with_STM.pure_year == chosen_year)]

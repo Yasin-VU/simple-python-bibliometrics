@@ -12,7 +12,7 @@ from pybliometrics.scopus import ScopusSearch
 import nltk
 ###nltk.download('punkt')
 
-# imports from our own import framework
+# imports from our own import framework 
 import sys
 ###sys.path.insert(0, 'C:/Users/yasing/Desktop/git/simple-python-bibliometrics')  # not needed in pycharm
 from nlp_functions import faculty_finder
@@ -26,9 +26,26 @@ from core_functions import add_unpaywall_columns
 from core_functions import my_timestamp
 from core_functions import add_deal_info
 ### this needs to be replaced with the luigi-scopus-arm as that works 100x better, but first this...
+# !
 
 
-def get_scopus_arm(MY_YEARSET=[2017, 2018, 2019, 2020]):
+def get_scopus_arm(MY_YEARSET,
+                   start_path_with_slash,
+                   df_in=None, # there is no df_in (!))
+                   do_save=False): 
+    """
+    Use the assumption that MY_YEARSET is always 3 years
+    Once we get this in Luigi it will work better than arbitrary length sets
+    because this is an ATOMIC split of work and works well concurrently
+    luigi will always skip parts if they already exist
+    you do have to put it well in luigi: this function will be 2 pipe-types
+    type-1 will do 1 year only
+    type-2 will combine 3 years only
+    and that is all you need because the entire pure arm is for 1 chosen year
+    but can be easily extended to do multiple chosen years efficiently
+    """
+        
+    dict_output = {}
 
     for MY_YEAR in MY_YEARSET:
 
@@ -44,13 +61,13 @@ def get_scopus_arm(MY_YEARSET=[2017, 2018, 2019, 2020]):
             path_deals = 'C:/Users/yasing/Desktop/oa oktober/apcdeals.csv'                #check
             path_isn = 'C:/Users/yasing/Desktop/oa oktober/ISN_ISSN.csv'                  #check
             path_org = 'C:/Users/yasing/Desktop/oa oktober/vu_organogram_2.xlsx'          #check
-            path_out = 'C:/Users/yasing/Desktop/oa oktober/'                              #check
+            path_out = start_path_with_slash #'C:/Users/yasing/Desktop/oa oktober/'                              #check
             path_vsnu_afids = 'C:/Users/yasing/Desktop/oa oktober/afids_vsnu_nonfin.csv'  #check
         else:
             path_deals = r'G:\UBVU\Data_RI\raw data algemeen\apcdeals.csv'
             path_isn = r'G:\UBVU\Data_RI\raw data algemeen\ISN_ISSN.csv'
             path_org = r'G:\UBVU\Data_RI\raw data algemeen\vu_organogram_2.xlsx'
-            path_out = 'C:/Users/yasin/Desktop/oa new csv/'  # no r
+            path_out = start_path_with_slash #'C:/Users/yasin/Desktop/oa new csv/'  # no r
             path_vsnu_afids = r'G:\UBVU\Data_RI\raw data algemeen\afids_vsnu_nonfin.csv'
 
         # scopus search and affiliation
@@ -174,7 +191,8 @@ def get_scopus_arm(MY_YEARSET=[2017, 2018, 2019, 2020]):
         # save to pickle with abstract_object, for now
         # df.to_pickle(path_out  + 'oa' + my_timestamp() + str(MY_YEAR) +  '.pkl')
         # save to csv without abstract_object0
-        df.drop(columns=['abstract_object']).to_csv(path_out + 'oa' + my_timestamp() + str(MY_YEAR) +  '.csv')
+        if do_save:
+            df.drop(columns=['abstract_object']).to_csv(path_out + 'oa' + my_timestamp() + str(MY_YEAR) +  '.csv')
 
 
         # diagnose
@@ -279,9 +297,11 @@ def get_scopus_arm(MY_YEARSET=[2017, 2018, 2019, 2020]):
             # bij een workflow moet er even op PURE gekeken worden naar de huidige faculteit/groep van de auteur (evt hand/automatisch)
             return res
         df2['vu_contact_person'] = df2.apply(get_contact_point,axis=1)
-        df2.to_csv(path_out + 'knip_OA_VU' + str(MY_YEAR) + '_met_corresponding_authors.csv')
-        df2.to_excel(path_out + 'knip_OA_VU' + str(MY_YEAR) + '_met_corresponding_authors.xlsx')
+        if do_save:
+            df2.to_csv(path_out + 'knip_OA_VU' + str(MY_YEAR) + '_met_corresponding_authors.csv')
+            df2.to_excel(path_out + 'knip_OA_VU' + str(MY_YEAR) + '_met_corresponding_authors.xlsx')
 
+        dict_output[MY_YEAR] = df2
 
     print('done with scopus arm')
-
+    return dict_output
