@@ -39,7 +39,22 @@
 # so just do it part by part
 # do one thing at a time 
 #
-
+#
+# update: I tried the full pure thing, but then we need to put start_paths
+#         in the major layer, so I reverted that
+#         there is also an issue where these functions call non-pure functions
+#         so I guess it is best to tackle these issues when moving to luigi
+#         including the settings-based-naming
+#         
+#         for now, this is good enough
+#         - it shows all necessary code to get oa_dash data for a given year
+#         - the code has some documentation and logic splits
+#         - the year setting seems to work properly
+#
+#         perform some tests and luigi refactoring when we have more time
+#         right now, first team metrics
+#
+#         update: I added documentation in the subfunctions afterwards
 
 
 
@@ -56,14 +71,19 @@ from data_integration_column_fuser import column_fuser_and_fac_unknown_fixer
 # top-level settings (requires refactoring first)
 top_start_path = PATH_START + '/raw data algemeen/oa2019map'
 top_chosen_year = 2019
-
-
+#
+host = pd.read_csv(PATH_START_PERSONAL + '/password_xpure.csv').host[0]
+database = pd.read_csv(PATH_START_PERSONAL + '/password_xpure.csv').database[0]
+user = pd.read_csv(PATH_START_PERSONAL + '/password_xpure.csv').user[0]
+pw = pd.read_csv(PATH_START_PERSONAL + '/password_xpure.csv').pw[0]
+xpure_pack = [host, database, user, pw]
 
 
 
 # Step 1
 dict_output = get_scopus_arm(MY_YEARSET=[top_chosen_year-1, top_chosen_year, top_chosen_year+1],
                              start_path_with_slash = top_start_path + '/',
+                             xpure_pack=xpure_pack,
                              df_in=None, # there is no df_in (!))
                              do_save=False)  
 # dict_output has three keys, one for every year, and contains oa_knip dataframes
@@ -71,17 +91,16 @@ dict_output = get_scopus_arm(MY_YEARSET=[top_chosen_year-1, top_chosen_year, top
 # warning: using do_save above will break Step 2 unless you refactor it
 
 # Step 2
-prepare_combined_data(start_path=top_start_path,
+df_total = prepare_combined_data(start_path=top_start_path,
                       year_range=tuple([top_chosen_year-1, top_chosen_year, top_chosen_year+1]),  # please chunks of 3 year or it will not work!
+                      xpure_pack=xpure_pack,
                       add_abstract=True,
                       skip_preprocessing_pure_instead_load_cache=False,  # safe
                       remove_ultra_rare_class_other=True,
-                      path_pw=PATH_START_PERSONAL,
-                      org_info=pd.read_excel(PATH_START + '/raw data algemeen/vu_organogram_2.xlsx', skiprows=0))
+                      org_info=pd.read_excel(PATH_START + '/raw data algemeen/vu_organogram_2.xlsx', skiprows=0))  # this setting only sets locally!!!
 
 # Step 3
 stm = SoftTitleMatcher()
-df_total = pd.read_csv(top_start_path + '/merged_data/df_total.csv')  # this must be generated in step 2 above... this needs a year-range in naming csv
 df_total_with_STM, df_total_with_STM_rich_chosen_year = stm.improve_merged_table_using_STM_results(df_total=df_total,
                                                                                             chosen_year=top_chosen_year,
                                                                                             out_path=None,

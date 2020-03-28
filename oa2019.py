@@ -31,9 +31,22 @@ from core_functions import add_deal_info
 
 def get_scopus_arm(MY_YEARSET,
                    start_path_with_slash,
+                   xpure_pack,
                    df_in=None, # there is no df_in (!))
                    do_save=False): 
     """
+    get_scopus_arm is a refactor of the legacy scopus code from jupyter
+    careful: we also have a luigi-variant of this!
+    so you should use the luigi variant whenever possible
+    I made this here because I needed an exact copy for a quick sprint
+    
+    so what does it do?
+    it harvests scopus and then enriches it with unpaywall, deals, etc
+    it also renames columns and deletes columns
+    
+    
+    
+    
     Use the assumption that MY_YEARSET is always 3 years
     Once we get this in Luigi it will work better than arbitrary length sets
     because this is an ATOMIC split of work and works well concurrently
@@ -43,8 +56,13 @@ def get_scopus_arm(MY_YEARSET,
     type-2 will combine 3 years only
     and that is all you need because the entire pure arm is for 1 chosen year
     but can be easily extended to do multiple chosen years efficiently
+
+    
+    
     """
         
+    xpure_pack  # is not used right now, but OK
+    
     dict_output = {}
 
     for MY_YEAR in MY_YEARSET:

@@ -20,12 +20,14 @@ nltk.download('punkt', quiet=True)  # check for punkt silently
 class SoftTitleMatcher:
     """
 
-    DEPRECATED and no longer supported: do not use.
-    update: then what AM I supposed to use?
-
-
-
-    I want all processing here and a non-multipool nonfork variant in here
+    this class encompasses all functions related to soft-title-matching
+    it has multiple layers
+    on lowest layer, it computes a jaccard score for every 2 titles
+    above that, it searches the match with highest score
+    above that, it loops all left titles
+    above that, uses these matches and the chosen condition to backmerge
+    
+    the variant is non-multipool for now, but should wrap 10kx10k in <5 minutes
     
     example code:
         stm = soft_title_matcher(silent=False)

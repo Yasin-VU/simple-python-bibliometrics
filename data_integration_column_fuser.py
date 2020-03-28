@@ -29,6 +29,27 @@ def column_fuser_and_fac_unknown_fixer(df = pd.read_csv(r'G:\UBVU\Data_RI\raw da
                                        start_path = r'G:\UBVU\Data_RI\raw data algemeen\oa2019map',
                                        do_save = True,
                                        chosen_year=2019):
+    """
+    This function does 2 things:
+        1. it fuses columns in the dataframe
+        2. it uses machine learning to find the faculties where null values live
+        
+    the fuse of columns works as follows
+    There are multiple columns with the same info, but different quality & fill
+    by using a hieracrhical priority we combine these columns into 1 and rename
+    
+    The machine learning loads a model and just runs it
+    
+    It also provides some fix on previously skipped unpaywall routines
+    It took some time to make it work well : )
+    
+    FInally, there are limitations:
+        - the enrichment routines are not yet edited to work for the pure records!
+        - pure apis are not used
+        - there is no refresh option: only empty fields are filled with upw
+    
+    
+    """
 
     # settings
     #

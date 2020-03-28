@@ -1910,10 +1910,10 @@ def merge_pure_with_scopus_data(df_p, df_s, df_t):
 
 def prepare_combined_data(start_path,
                          year_range,
+                         xpure_pack,
                          add_abstract=True,
                          skip_preprocessing_pure_instead_load_cache=False,  # safe
                          remove_ultra_rare_class_other=True,
-                         path_pw=static.PATH_START_PERSONAL,
                          org_info=pd.read_excel( static.PATH_START + 'raw data algemeen/vu_organogram_2.xlsx', skiprows=0)):
     """
     This function prepares the combined data for a chosen year_range
@@ -1937,15 +1937,17 @@ def prepare_combined_data(start_path,
     :return:
     """
 
+    # 0. unpack xpure settings
+    [host, database, user, pw] = xpure_pack
 
     # 1. prepare helper variables
     # 1A. wrap immutable parameters
     year_range = list(year_range)
     # 1B. load xpure user/pass
-    host = pd.read_csv(path_pw + '/password_xpure.csv').host[0]
-    database = pd.read_csv(path_pw + '/password_xpure.csv').database[0]
-    user = pd.read_csv(path_pw + '/password_xpure.csv').user[0]
-    pw = pd.read_csv(path_pw + '/password_xpure.csv').pw[0]
+    #host = pd.read_csv(path_pw + '/password_xpure.csv').host[0]
+    #database = pd.read_csv(path_pw + '/password_xpure.csv').database[0]
+    #user = pd.read_csv(path_pw + '/password_xpure.csv').user[0]
+    #pw = pd.read_csv(path_pw + '/password_xpure.csv').pw[0]
 
     # 2. add abstract
     if add_abstract:
@@ -2075,7 +2077,7 @@ def prepare_combined_data(start_path,
     # 2. config and run nlp2
     # 3. config and run incorporate_stm_results
 
-    return None
+    return df_chosen_year
 
 
 def get_altmetric(row, col='cited_by_policies_count'):
