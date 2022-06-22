@@ -12,7 +12,7 @@ mysql==0.0.2
 mysql-connector-python==8.0.19
 mysqlclient==1.4.6
 nltk==3.4.5
-numpy==1.16.0
+numpy==1.22.0
 pandas==1.0.0
 pbr==5.4.4
 pendulum==2.0.5
